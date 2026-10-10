@@ -88,14 +88,29 @@ export default function Auth(){
           <p className="text-xs text-zinc-500 mt-1">Instala em 1 toque. Depois funciona offline e updates vêm sozinhos.</p>
           <div className="mt-4 grid md:grid-cols-2 gap-3">
             <div className="rounded-2xl border border-zinc-200 p-4 bg-zinc-50">
-              <div className="text-sm font-bold text-zinc-900 flex items-center gap-1.5"><Apple size={14}/> iPhone — app nativa</div>
-              <p className="text-xs text-zinc-600 mt-1">100% com Bluetooth EMS. Sem App Store.</p>
+              <div className="text-sm font-bold text-zinc-900 flex items-center gap-1.5"><Apple size={14}/> iPhone — funciona já</div>
+              <p className="text-xs text-zinc-600 mt-1">PWA 100% funcional agora — 1 toque, sem App Store.</p>
               <div className="mt-3 space-y-2">
-                <a href="https://testflight.apple.com/join/placeholder" target="_blank" rel="noopener" className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-black text-white rounded-xl py-2.5 text-sm font-bold transition-colors"> TestFlight — instalar</a>
-                <a href="/assets/app/TechBodyU.ipa" onClick={(e)=>{ if(!(e as any).currentTarget.href.includes('http')){ e.preventDefault(); setShowIOSInfo(v=>!v) } }} className="w-full flex items-center justify-center gap-2 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl py-2.5 text-sm font-semibold transition-colors"><Download size={14}/> .ipa direto UE</a>
-                <button onClick={()=>setShowIOSInfo(v=>!v)} className="w-full text-xs font-semibold text-[#FF7A1A] hover:underline">Como instalar? →</button>
+                <button onClick={()=>setShowIOSInfo(v=>!v)} className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-black text-white rounded-xl py-2.5 text-sm font-bold transition-colors"><Apple size={14}/> Instalar no iPhone — 1 toque</button>
+                <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 justify-center"><Bluetooth size={12}/> Treino 100% aqui • BLE via Bluefy/TestFlight opcional</div>
+                <button onClick={()=>setShowIOSInfo(v=>!v)} className="w-full text-xs font-semibold text-[#FF7A1A] hover:underline">Ver instruções iPhone →</button>
               </div>
-              {showIOSInfo && <div className="mt-3 bg-white border border-zinc-200 rounded-xl p-3 text-xs leading-relaxed text-zinc-700">1. Toca em TestFlight → aceita → instala<br/>2. Alternativa UE: toca em .ipa → permite → instala (requer iOS 17.4+ UE)<br/><span className="text-[11px] text-zinc-500">Updates OTA via Capgo: abres a app e recebe o novo design/treinos sem voltar à loja.</span></div>}
+              {showIOSInfo && <div className="mt-3 bg-white border border-zinc-200 rounded-xl p-3 text-xs leading-relaxed text-zinc-700 space-y-2">
+                <div className="font-bold flex items-center gap-1"><Apple size={12}/> PWA já funcional (recomendado):</div>
+                <div>1. No Safari toca em <span className="font-semibold">Partilhar ↑</span> → <span className="font-semibold">Adicionar ao Ecrã Principal</span> → <span className="font-semibold">Adicionar</span><br/>2. Abre pelo ícone TechBody U — fica como app nativa, offline e com updates automáticos.</div>
+                <div className="bg-orange-50 border border-orange-100 rounded-lg px-2.5 py-2 text-[11px]">
+                  <span className="font-bold flex items-center gap-1"><Bluetooth size={10}/> Bluetooth EMS no iPhone:</span> Safari bloqueia BLE. Para 100% com fato usa <a href="https://apps.apple.com/app/bluefy/id1492822055" target="_blank" rel="noopener" className="underline font-semibold text-[#007AFF]">Bluefy browser</a> (grátis) e abre o mesmo link, ou aguarda TestFlight nativo.
+                </div>
+                <div className="bg-zinc-50 rounded-lg px-2.5 py-2 text-[11px] text-zinc-600">
+                  <span className="font-bold">TestFlight / .ipa UE:</span> em preparação — precisa Apple Developer ($99/ano, sem review App Store). Já configurado via Capacitor + Capgo OTA. Assim que o Team ID estiver ativo, os botões ficam com links reais e updates sem loja: <code className="bg-white px-1 rounded border">npx @capgo/cli bundle upload</code>.
+                </div>
+                <div className="flex gap-2">
+                  <a href="https://apps.apple.com/app/bluefy/id1492822055" target="_blank" rel="noopener" className="flex-1 text-center bg-[#007AFF] hover:bg-blue-600 text-white rounded-xl py-2 text-xs font-bold">Abrir Bluefy</a>
+                  <span className="flex-1 text-center bg-zinc-100 text-zinc-500 rounded-xl py-2 text-xs font-semibold border border-zinc-200">TestFlight em breve</span>
+                </div>
+                <div className="text-[11px] text-zinc-500">Updates: <span className="font-semibold">Cloudflare Pages</span> para web/PWA + <span className="font-semibold">Capgo OTA</span> para nativo — sem App Store.</div>
+                <a href="/#/download" className="inline-block text-xs font-bold text-[#FF7A1A] hover:underline">→ Ver página /download completa</a>
+              </div>}
             </div>
             <div className="rounded-2xl border border-zinc-200 p-4 bg-white">
               <div className="text-sm font-bold text-zinc-900 flex items-center gap-1.5"><Smartphone size={14}/> Android / Desktop</div>
