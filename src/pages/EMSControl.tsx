@@ -1,43 +1,80 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ChevronLeft, Minus, Plus, Bluetooth, Zap, Droplets, Power, CheckCircle2 } from 'lucide-react'
+import { ChevronLeft, Minus, Plus, Bluetooth, Droplets, Power, CheckCircle2, Battery, Unplug, AlertTriangle } from 'lucide-react'
 import { useAppState } from '../context/AppState'
+import { isBluetoothSupported, requestEMSDevice, requestAnyDevice, connectDevice, readBattery, discoverServices, writeIntensity } from '../lib/ems-bluetooth'
 
 export default function EMSControl(){
-  const { calibracoes, setCalib } = useAppState()
-  const [mockConnected,setMock]=useState(()=>{
-    const s=localStorage.getItem('tbu:ems:connected')
-    return s ? s==='1' : false
-  })
-  const [desligado,setDesligado]=useState(()=>{
-    return localStorage.getItem('tbu:ems:paused')==='1'
-  })
+  const { calibracoes, setCalib, bleConnected, bleName, bleBattery, bleServer, setBleConnection, clearBle, demoMode, setDemoMode } = useAppState() as any
+  const [paused,setPaused]=useState(()=> localStorage.getItem('tbu:ems:paused')==='1')
   const [toast,setToast]=useState<string|null>(null)
   const [scanning,setScanning]=useState(false)
-  const [found,setFound]=useState<string[]>([])
+  const [services,setServices]=useState<string[]>([])
+  const [btSupported,setBtSupported]=useState<boolean>(true)
+  const [error,setError]=useState<string|null>(null)
   const muscles=['Peitoral','Glúteos','Abdómen','Tríceps','Bíceps','Isquiotibiais','Trapézio']
   const [wizard,setWizard]=useState(false)
   const [step,setStep]=useState(0)
   const cur = muscles[step]
   const [intCur,setIntCur]=useState(1)
-  useEffect(()=> localStorage.setItem('tbu:ems:connected', mockConnected?'1':'0'),[mockConnected])
-  useEffect(()=> localStorage.setItem('tbu:ems:paused', desligado?'1':'0'),[desligado])
+  const connected = bleConnected || demoMode
+  const isDemoOnly = demoMode && !bleConnected
+
+  useEffect(()=> setBtSupported(isBluetoothSupported()),[])
+  useEffect(()=> localStorage.setItem('tbu:ems:paused', paused?'1':'0'),[paused])
   useEffect(()=>{
     if(wizard) setIntCur(calibracoes[cur] ?? 1)
   },[wizard, step, cur, calibracoes])
   useEffect(()=>{
-    if(toast){ const t=setTimeout(()=>setToast(null),2400); return ()=>clearTimeout(t) }
+    if(toast){ const t=setTimeout(()=>setToast(null),2800); return ()=>clearTimeout(t) }
   },[toast])
+  useEffect(()=>{
+    if(error){ const t=setTimeout(()=>setError(null),5000); return ()=>clearTimeout(t) }
+  },[error])
+
   const showToast=(m:string)=> setToast(m)
 
-  const startScan=()=>{
-    setScanning(true); setFound([])
-    showToast('A procurar fato via Bluetooth…')
-    setTimeout(()=> setFound(['EMS-TechBody-A3F9','EMS-Suit-2841']),1200)
-    setTimeout(()=> setScanning(false),1600)
+  const handleRealConnect = async (useAny=false)=>{
+    setError(null)
+    if(!isBluetoothSupported()){
+      setError('Bluetooth não suportado. Usa Chrome/Edge atualizado em Android/Desktop via HTTPS. No iPhone, o Web Bluetooth é limitado — usa Chrome iOS 16.4+ ou app nativa. Podes testar em Modo Demo.')
+      return
+    }
+    setScanning(true)
+    try{
+      const dev = useAny ? await requestAnyDevice() : await requestEMSDevice()
+      const name = dev.name || dev.id.slice(0,12)
+      showToast(`A ligar a ${name}…`)
+      const srv = await connectDevice(dev)
+      const b = await readBattery(srv)
+      const svcs = await discoverServices(srv)
+      setServices(svcs)
+      setBleConnection(dev, srv, name, b)
+      showToast(`Ligado a ${name} ✓ ${b!==undefined ? '• '+b+'%' : '• BLE'}`)
+    }catch(e:any){
+      const msg = e?.message || String(e)
+      if(msg.includes('Nenhum') || msg.includes('Cancelado')) showToast('Cancelado')
+      else if(msg.includes('User cancelled') || msg.includes('NotFoundError')) showToast('Cancelado — não foi selecionado dispositivo')
+      else setError(msg)
+    }finally{ setScanning(false) }
   }
-  const connect=(id:string)=>{
-    setMock(true); setDesligado(false); showToast(`Ligado a ${id} ✓`)
+
+  const handleIntensityWrite = async (muscle:string, value:number)=>{
+    setCalib(muscle, value)
+    if(bleConnected && bleServer){
+      const ok = await writeIntensity(bleServer, muscle, value)
+      if(ok) showToast(`Enviado ${value}% para ${muscle} via BLE`)
+    }
+  }
+
+  const testIntensity = async ()=>{
+    setCalib(cur, intCur)
+    if(bleConnected && bleServer){
+      const ok = await writeIntensity(bleServer, cur, intCur)
+      showToast(ok ? `Teste ${intCur}% enviado para ${cur} ✓ BLE` : `Guardado ${intCur}% (BLE sem confirmação)`)
+    } else {
+      showToast(`Guardado ${intCur}%` + (isDemoOnly ? ' — Demo' : ''))
+    }
   }
 
   return (
@@ -48,16 +85,16 @@ export default function EMSControl(){
         <span className="w-8"/>
       </div>
 
-      {!mockConnected ? (
+      {!connected ? (
         <div className="p-4 md:p-6 max-w-[640px] mx-auto">
           <div className="bg-white rounded-[20px] border border-zinc-200 p-5 md:p-6 shadow-sm">
-            <div className="flex items-center gap-2 text-[#FF7A1A] text-sm font-bold"><Bluetooth size={18}/> Como ligar o fato</div>
-            <p className="text-xs text-zinc-500 mt-1">3 passos — demora 20 segundos</p>
+            <div className="flex items-center gap-2 text-[#FF7A1A] text-sm font-bold"><Bluetooth size={18}/> Como ligar o fato — Bluetooth real</div>
+            <p className="text-xs text-zinc-500 mt-1">3 passos — 20s • ligação BLE verdadeira via Web Bluetooth</p>
             <div className="mt-5 grid grid-cols-3 gap-3 text-center">
               <div className="bg-orange-50 border border-orange-100 rounded-2xl p-3">
                 <div className="w-9 h-9 mx-auto rounded-xl bg-white border border-orange-200 grid place-items-center text-[#FF7A1A]"><Droplets size={16}/></div>
                 <div className="text-xs font-bold mt-2">1. Veste & humedece</div>
-                <div className="text-[11px] text-zinc-500 leading-tight mt-1">Água ou gel nas zonas pretas do fato</div>
+                <div className="text-[11px] text-zinc-500 leading-tight mt-1">Água ou gel nas zonas pretas</div>
               </div>
               <div className="bg-zinc-50 border border-zinc-200 rounded-2xl p-3">
                 <div className="w-9 h-9 mx-auto rounded-xl bg-zinc-900 text-white grid place-items-center"><Power size={16}/></div>
@@ -67,36 +104,19 @@ export default function EMSControl(){
               <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3">
                 <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-500 text-white grid place-items-center"><Bluetooth size={16}/></div>
                 <div className="text-xs font-bold mt-2">3. Emparelha</div>
-                <div className="text-[11px] text-zinc-500 leading-tight mt-1">Toca abaixo em Ligar Fato</div>
+                <div className="text-[11px] text-zinc-500 leading-tight mt-1">Toca em Ligar — escolhe na lista nativa do sistema</div>
               </div>
             </div>
 
-            <div className="mt-6">
-              {!scanning && found.length===0 && (
-                <button onClick={startScan} className="w-full bg-[#FF7A1A] hover:bg-orange-600 text-white rounded-full py-4 text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-orange-200 transition-colors">
-                  <Bluetooth size={18}/> Ligar Fato via Bluetooth
-                </button>
-              )}
-              {scanning && (
-                <div className="w-full border-2 border-dashed border-orange-200 rounded-2xl p-5 text-center bg-orange-50/50">
-                  <div className="w-10 h-10 mx-auto rounded-full border-2 border-orange-300 border-t-[#FF7A1A] animate-spin"/>
-                  <div className="text-sm font-bold mt-3 text-zinc-900">A procurar…</div>
-                  <div className="text-xs text-zinc-500">Mantém o telemóvel perto do módulo (≤1m) • Bluetooth ligado</div>
-                </div>
-              )}
-              {found.length>0 && !scanning && (
-                <div className="space-y-2">
-                  <div className="text-xs font-bold text-zinc-700">Dispositivos encontrados — toca para ligar:</div>
-                  {found.map(id=>(
-                    <button key={id} onClick={()=>connect(id)} className="w-full bg-white border-2 border-[#FF7A1A] rounded-2xl p-3.5 flex items-center justify-between hover:bg-orange-50 transition-colors text-left">
-                      <span className="flex items-center gap-3"><span className="w-9 h-9 rounded-xl bg-zinc-900 text-white grid place-items-center"><Zap size={14}/></span><span className="text-sm font-bold text-zinc-900">{id}</span></span>
-                      <span className="text-xs font-bold text-[#FF7A1A]">Ligar ›</span>
-                    </button>
-                  ))}
-                  <button onClick={startScan} className="w-full text-xs text-zinc-500 hover:text-zinc-700 py-2">↻ Procurar novamente</button>
-                </div>
-              )}
-              <p className="text-[11px] text-zinc-400 text-center mt-3">Sem o fato? Usa <span className="font-bold text-zinc-600">Modo Demo</span> — <button onClick={()=>{setMock(true); showToast('Modo Demo ligado')}} className="underline text-[#FF7A1A]">ligar demo</button></p>
+            <div className="mt-6 space-y-3">
+              <button onClick={()=>handleRealConnect(false)} disabled={scanning} className="w-full bg-[#FF7A1A] hover:bg-orange-600 disabled:opacity-60 text-white rounded-full py-4 text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-orange-200 transition-colors">
+                {scanning ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"/>{' '}A procurar…</> : <><Bluetooth size={18}/> Ligar Fato via Bluetooth</>}
+              </button>
+              <button onClick={()=>handleRealConnect(true)} disabled={scanning} className="w-full bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-700 rounded-full py-3 text-xs font-bold">Procurar todos os dispositivos BLE</button>
+              {!btSupported && <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 flex gap-2"><AlertTriangle size={14} className="shrink-0 mt-0.5"/> Este browser não tem Web Bluetooth. Instala Chrome/Edge atualizado em Android/Desktop e abre via HTTPS. No iPhone o suporte é limitado.</div>}
+              {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700">{error}</div>}
+              <p className="text-[11px] text-zinc-400 text-center">Sem hardware? <button onClick={()=>{setDemoMode(true); showToast('Modo Demo ligado — sem BLE real')}} className="underline text-[#FF7A1A] font-bold">Usar Modo Demo</button> (não liga de verdade, só simula)</p>
+              <p className="text-[11px] text-zinc-500 text-center leading-relaxed">Requer HTTPS + gesto do utilizador. O sistema operativo mostra a lista real de dispositivos BLE próximos — só aparece o fato se estiver ligado e perto (&lt;1m).</p>
             </div>
           </div>
 
@@ -104,65 +124,65 @@ export default function EMSControl(){
             <img src="/assets/images/suit-front.png" alt="suit" className="w-20 h-32 object-contain opacity-90"/>
             <div className="flex-1">
               <div className="text-xs font-bold text-zinc-900">Precisas de ajuda?</div>
-              <div className="text-xs text-zinc-500 mt-1 leading-relaxed">Vídeo de 45s: como vestir e apertar. O gel melhora o contacto — sem dor.</div>
-              <button onClick={()=>showToast('Vídeo: em breve — verás no YouTube TechBody')} className="mt-2 text-xs font-bold text-[#FF7A1A] hover:underline">Ver vídeo ›</button>
+              <div className="text-xs text-zinc-500 mt-1 leading-relaxed">LED azul intermitente = pronto. Verifica permissões de Bluetooth no sistema e mantém o telemóvel perto.</div>
+              <button onClick={()=>showToast('Dica: reinicia o módulo, confirma Bluetooth ativo, aproxima o telemóvel.')} className="mt-2 text-xs font-bold text-[#FF7A1A] hover:underline">Diagnóstico ›</button>
             </div>
           </div>
         </div>
       ) : (
         <>
-          <div className={`mx-4 md:mx-6 mt-4 text-sm px-4 py-3 rounded-xl border flex items-center justify-between ${!desligado ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-zinc-100 border-zinc-200 text-zinc-600'}`}>
-            <span className="flex items-center gap-2">{!desligado ? <><CheckCircle2 size={16}/> Fato ligado • sincronizado • 99%</> : <>○ Em pausa — sem estímulo</>}</span>
-            <span className={`w-2 h-2 rounded-full ${!desligado ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`}/>
+          <div className={`mx-4 md:mx-6 mt-4 text-sm px-4 py-3 rounded-xl border flex items-center justify-between ${!paused ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-zinc-100 border-zinc-200 text-zinc-600'}`}>
+            <span className="flex items-center gap-2">{!paused ? <><CheckCircle2 size={16}/> {isDemoOnly ? 'Modo Demo — sem BLE real' : `Ligado BLE • ${bleName || 'EMS Device'} ${bleBattery!==undefined ? '• '+bleBattery+'%' : ''}`}</> : <>○ Em pausa — sem estímulo</>}</span>
+            <span className="flex items-center gap-1.5">{bleBattery!==undefined && <span className="flex items-center gap-1 text-xs font-bold"><Battery size={12}/>{bleBattery}%</span>} <span className={`w-2 h-2 rounded-full ${!paused ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'}`}/></span>
           </div>
+          {isDemoOnly && <div className="mx-4 md:mx-6 mt-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-xs text-amber-800">Demo ativo — não há ligação BLE. Liga o fato para controlo real via Bluetooth.</div>}
+          {bleConnected && services.length>0 && <div className="mx-4 md:mx-6 mt-2 text-[11px] text-zinc-500">GATT serviços: {services.slice(0,3).join(', ')}{services.length>3?' …':''}</div>}
           <div className="p-4 md:p-6 max-w-[800px] mx-auto space-y-4">
             <div className="bg-white border border-zinc-200 rounded-2xl p-4 md:p-5">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-bold text-zinc-900">My Device</div>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${!desligado ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-zinc-50 border-zinc-200 text-zinc-600'}`}>{!desligado ? '● Ligado' : '○ Pausa'}</span>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${!paused ? (isDemoOnly ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700') : 'bg-zinc-50 border-zinc-200 text-zinc-600'}`}>{bleConnected ? '● BLE real' : isDemoOnly ? '● Demo (simulado)' : '○ Pausa'}</span>
               </div>
               <div className="flex items-center gap-3 mt-3">
-                <div className={`w-11 h-11 rounded-xl grid place-items-center text-white ${desligado?'bg-zinc-400':'bg-zinc-900'}`}><Bluetooth size={18}/></div>
+                <div className={`w-11 h-11 rounded-xl grid place-items-center text-white ${paused?'bg-zinc-400': isDemoOnly ? 'bg-amber-500' : 'bg-zinc-900'}`}><Bluetooth size={18}/></div>
                 <div className="flex-1">
-                  <div className="text-sm font-semibold">{!desligado ? 'EMS-TechBody-A3F9' : 'EMS Device (Pausa)'}</div>
-                  <div className={`text-xs ${!desligado?'text-emerald-600':'text-zinc-500'}`}>{!desligado ? '● Ligado • 99% • Bluetooth 5.0' : '○ Em pausa • toca em Ligar'}</div>
+                  <div className="text-sm font-semibold">{bleName || (isDemoOnly ? 'EMS Device (Demo)' : 'EMS Device (BLE)')}</div>
+                  <div className={`text-xs ${!paused?'text-emerald-600':'text-zinc-500'}`}>{!paused ? (isDemoOnly ? 'Demo • sem hardware • local' : `BLE conectado • ${bleBattery!==undefined? bleBattery+'% • ':''}Web Bluetooth`) : '○ Em pausa • sem estímulo'}</div>
                 </div>
                 <img src="/assets/images/suit-front.png" alt="suit" className="w-12 h-16 object-contain opacity-80 hidden sm:block"/>
               </div>
-              <div className="flex gap-2 mt-4">
-                <button onClick={()=>{
-                  setDesligado(v=>!v); showToast(!desligado ? 'Dispositivo em pausa' : 'Dispositivo ligado')
-                }} className={`px-4 py-2 rounded-full border text-sm font-semibold transition-colors cursor-pointer ${desligado?'bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-600':'border-orange-200 text-orange-600 hover:bg-orange-50'}`}>{desligado ? '▶ Ligar' : '⏸ Pausa'}</button>
-                <button onClick={()=>{ setMock(false); setDesligado(false); showToast('Dispositivo desligado — volta a ligar em 3 passos')}} className="px-4 py-2 rounded-full bg-white border border-zinc-200 text-zinc-700 text-sm font-semibold hover:bg-zinc-50 cursor-pointer">Desconectar</button>
-                <button onClick={()=>{ setMock(false); setDesligado(false); showToast('Removido')}} className="ml-auto px-3 py-2 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-bold hover:bg-red-100">Remover</button>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <button onClick={()=>{ setPaused(v=>!v); showToast(!paused ? 'Pausa — BLE mantém ligado' : 'Retomado — pronto para enviar') }} className={`px-4 py-2 rounded-full border text-sm font-semibold ${paused?'bg-emerald-500 text-white border-emerald-500':'border-orange-200 text-orange-600 hover:bg-orange-50'}`}>{paused ? '▶ Retomar' : '⏸ Pausa'}</button>
+                {bleConnected ? <button onClick={()=>{ clearBle(); setServices([]); showToast('BLE desligado — volta a Ligar') }} className="px-4 py-2 rounded-full bg-white border border-zinc-200 text-zinc-700 text-sm font-semibold hover:bg-zinc-50"><Unplug size={14} className="inline mr-1"/> Desligar BLE</button> : <button onClick={()=>{setDemoMode(false); showToast('Demo desligado')}} className="px-4 py-2 rounded-full bg-white border border-zinc-200 text-zinc-700 text-sm font-semibold">Sair Demo</button>}
+                <button onClick={()=>{ if(bleConnected) clearBle(); setDemoMode(false); setServices([]); showToast('Removido')}} className="ml-auto px-3 py-2 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs font-bold hover:bg-red-100">Remover</button>
               </div>
-              <div className="mt-3 text-[11px] text-zinc-400">Dica: mantém o módulo carregado • LED azul = pronto • vermelho = a carregar</div>
+              <div className="mt-3 text-[11px] text-zinc-400">Web Bluetooth • HTTPS • Chrome/Edge Android/Desktop • iOS: suporte limitado, prefere Android para treino real com fato.</div>
             </div>
 
-            <button onClick={()=>{ if(desligado){ showToast('Fato em pausa — liga primeiro'); return } setStep(0); setWizard(true)}} className="w-full bg-gradient-to-r from-[#FF7A1A] to-[#FF9A3A] text-white rounded-2xl p-5 text-left flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
+            <button onClick={()=>{ if(paused){ showToast('Em pausa — retoma'); return } setStep(0); setWizard(true)}} className="w-full bg-gradient-to-r from-[#FF7A1A] to-[#FF9A3A] text-white rounded-2xl p-5 text-left flex items-center justify-between hover:shadow-md">
               <div>
                 <div className="text-sm md:text-base font-bold">Calibração de Intensidade</div>
-                <div className="text-xs md:text-sm opacity-90 mt-0.5">Calibre a intensidade ideal para cada grupo muscular</div>
+                <div className="text-xs md:text-sm opacity-90 mt-0.5">Calibre cada grupo — {bleConnected ? 'envia via BLE real' : isDemoOnly ? 'Demo (não envia BLE)' : 'liga primeiro'}</div>
               </div>
               <span className="text-2xl">›</span>
             </button>
 
             <div className="bg-white rounded-2xl border border-zinc-200 p-4 md:p-5">
-              <div className="text-sm font-bold text-zinc-900">Ajustes rápidos — toca Calibrar para sentir</div>
-              <div className="text-xs text-zinc-500 mt-1">Cada zona guarda o seu nível — começa em 1 e sobe devagar.</div>
+              <div className="text-sm font-bold text-zinc-900">Ajustes — {bleConnected ? 'BLE real' : isDemoOnly ? 'Demo' : 'desligado'}</div>
+              <div className="text-xs text-zinc-500 mt-1">± guarda local + tenta enviar via GATT se BLE ligado. Começa em 1, sobe devagar.</div>
               <div className="mt-4 space-y-1">
                 {muscles.map(m=>{
                   const v = calibracoes[m] ?? 1
                   return (
                     <div key={m} className="flex items-center gap-2 py-2.5 border-b border-zinc-100 last:border-0">
                       <span className="w-28 md:w-36 text-sm text-zinc-700">{m}</span>
-                      <button onClick={()=>setCalib(m, v-1)} className="w-8 h-8 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50 cursor-pointer"><Minus size={14}/></button>
+                      <button onClick={()=>handleIntensityWrite(m, v-1)} className="w-8 h-8 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50"><Minus size={14}/></button>
                       <span className="w-8 h-8 rounded-full bg-[#FF7A1A] text-white grid place-items-center text-sm font-bold">{v}</span>
-                      <button onClick={()=>setCalib(m, v+1)} className="w-8 h-8 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50 cursor-pointer"><Plus size={14}/></button>
-                      <button onClick={()=>{
-                        if(desligado){ showToast('Fato em pausa — liga primeiro'); return }
+                      <button onClick={()=>handleIntensityWrite(m, v+1)} className="w-8 h-8 rounded-full border border-zinc-200 grid place-items-center hover:bg-zinc-50"><Plus size={14}/></button>
+                      <button onClick={async()=>{
+                        if(paused){ showToast('Em pausa — retoma'); return }
                         const idx=muscles.indexOf(m); setStep(idx); setIntCur(v); setWizard(true)
-                      }} className="ml-auto bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full transition-colors cursor-pointer">Calibrar</button>
+                      }} className="ml-auto bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-4 py-2 rounded-full">Calibrar</button>
                     </div>
                   )
                 })}
@@ -176,27 +196,28 @@ export default function EMSControl(){
         <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-[440px] p-5 md:p-6 shadow-2xl">
             <h2 className="text-sm md:text-base font-bold text-[#FF7A1A] text-center">CALIBRAÇÃO DE INTENSIDADE</h2>
-            <p className="text-xs text-zinc-500 text-center mt-1.5">Sinta o estímulo e ajuste ao seu nível de conforto.</p>
-            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800">⚠ Pelo menos 5 min de aquecimento ou gel condutor nas zonas de contacto.</div>
-            <div className="mt-5 border-2 border-[#FF7A1A] rounded-xl p-3 text-center font-bold text-sm md:text-base text-zinc-900">{cur} • {intCur}%</div>
+            <p className="text-xs text-zinc-500 text-center mt-1.5">Sinta o estímulo. {bleConnected ? 'Envio BLE real quando confirmado.' : isDemoOnly ? 'Modo Demo — sem BLE.' : 'Sem ligação — guarda local.'}</p>
+            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800">⚠ 5 min aquecimento ou gel condutor.</div>
+            <div className="mt-5 border-2 border-[#FF7A1A] rounded-xl p-3 text-center font-bold text-sm md:text-base text-zinc-900">{cur} • {intCur}% {bleConnected && '• BLE'}</div>
             <div className="mt-4 bg-zinc-50 rounded-2xl p-5 text-center">
               <div className="text-sm font-bold text-zinc-700">Ajustar Intensidade</div>
               <div className="flex items-center justify-center gap-5 mt-4">
-                <button onClick={()=>setIntCur(v=>Math.max(0,v-1))} className="w-10 h-10 rounded-full bg-white border border-zinc-200 grid place-items-center hover:bg-zinc-50 cursor-pointer"><Minus size={18}/></button>
+                <button onClick={()=>setIntCur(v=>Math.max(0,v-1))} className="w-10 h-10 rounded-full bg-white border border-zinc-200 grid place-items-center hover:bg-zinc-50"><Minus size={18}/></button>
                 <div className="w-14 h-14 rounded-full bg-[#FF7A1A] text-white grid place-items-center text-xl font-bold">{intCur}</div>
-                <button onClick={()=>setIntCur(v=>Math.min(100,v+1))} className="w-10 h-10 rounded-full bg-white border border-zinc-200 grid place-items-center hover:bg-zinc-50 cursor-pointer"><Plus size={18}/></button>
+                <button onClick={()=>setIntCur(v=>Math.min(100,v+1))} className="w-10 h-10 rounded-full bg-white border border-zinc-200 grid place-items-center hover:bg-zinc-50"><Plus size={18}/></button>
               </div>
               <div className="text-xs text-zinc-500 mt-3">Progresso: {step+1}/7 • {muscles[step]}</div>
-              <button onClick={()=>{ const prev=muscles[step]; if(intCur===0) showToast('Intensidade 0 — sem estímulo'); setCalib(prev,intCur)}} className="mt-3 text-xs font-bold text-emerald-600 hover:underline cursor-pointer">Testar agora — aplicar {intCur}% em {cur}</button>
+              <button onClick={testIntensity} className="mt-3 text-xs font-bold text-emerald-600 hover:underline">Testar agora — aplicar {intCur}% em {cur} {bleConnected?'via BLE real':''}</button>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={()=>setWizard(false)} className="flex-1 border border-zinc-200 rounded-full py-3 text-sm font-semibold hover:bg-zinc-50 cursor-pointer">Fechar</button>
-              <button onClick={()=>{ setCalib(cur, intCur); if(step<muscles.length-1){ setStep(s=>s+1); setIntCur(calibracoes[muscles[step+1]]??1)} else { showToast('Calibração concluída'); setWizard(false)}}} className="flex-1 bg-[#FF7A1A] hover:bg-orange-600 text-white rounded-full py-3 text-sm font-bold transition-colors cursor-pointer">→ Seguinte</button>
+              <button onClick={()=>setWizard(false)} className="flex-1 border border-zinc-200 rounded-full py-3 text-sm font-semibold hover:bg-zinc-50">Fechar</button>
+              <button onClick={async()=>{ await handleIntensityWrite(cur, intCur); if(step<muscles.length-1){ setStep(s=>s+1); setIntCur(calibracoes[muscles[step+1]]??1)} else { showToast('Calibração concluída'+(bleConnected?' • BLE':'')); setWizard(false)}}} className="flex-1 bg-[#FF7A1A] hover:bg-orange-600 text-white rounded-full py-3 text-sm font-bold">→ Seguinte</button>
             </div>
           </div>
         </div>
       )}
       {toast && <div className="fixed bottom-[80px] md:bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg z-50 text-center max-w-[90%]">{toast}</div>}
+      {error && <div className="fixed bottom-[80px] md:bottom-6 left-1/2 -translate-x-1/2 bg-red-600 text-white text-sm px-4 py-2.5 rounded-full shadow-lg z-50 text-center max-w-[90%]">{error}</div>}
     </div>
   )
 }
