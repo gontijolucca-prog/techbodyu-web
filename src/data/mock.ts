@@ -38,7 +38,7 @@ export const categorias: Categoria[] = [
   { slug:'forca', titulo:'Força e Tonificação', thumb:'/assets/images/fullbody.png' },
   { slug:'saude', titulo:'Saúde e Bem Estar', thumb:'/assets/images/lowbodddy.png' },
   { slug:'livres', titulo:'Treinos Livres', thumb:'/assets/images/workoutplanp1.png' },
-  { slug:'tematicas', titulo:'Aulas Temáticas (Glúteos, Dança, ...)', thumb:'/assets/images/trainingerdeatils.png' },
+  { slug:'tematicas', titulo:'Aulas Temáticas (Glúteos, Dança, ...)', thumb:'/assets/images/trainerdeatils.png' },
 ]
 
 export const user = { nome:'LUIZ SANTANA', pontos:275, pontosTotal:350, conquistasPts:500, kcal:1328, membroDesde:'Março 2026' }

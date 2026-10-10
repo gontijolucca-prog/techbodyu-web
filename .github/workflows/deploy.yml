@@ -1,0 +1,46 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+concurrency:
+  group: "cf-pages-techbodyu-web"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+        timeout-minutes: 3
+
+      - name: Build
+        run: npm run build
+        timeout-minutes: 4
+
+      - name: Remove files >25MB (CF Pages limit)
+        run: find dist/ -size +25M -type f -delete
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        timeout-minutes: 5
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: a2cff0602323a3b179fd8581371c603d
+          command: pages deploy dist --project-name=techbodyu-web --branch=main

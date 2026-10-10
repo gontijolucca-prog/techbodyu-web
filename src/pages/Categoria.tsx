@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ChevronLeft, Info } from 'lucide-react'
 import { treinos } from '../data/mock'
@@ -13,6 +14,8 @@ const map: Record<string,string> = {
 export default function Categoria(){
   const { slug } = useParams()
   const { completed } = useAppState()
+  const [dl,setDl]=useState(89)
+  const [pausado,setPausado]=useState(false)
   const title = slug==='perda-de-peso' ? 'PERDA DE PESO' : slug==='forca' ? 'FORÇA E TONIFICAÇÃO' : slug==='saude' ? 'SAÚDE E BEM ESTAR' : slug==='livres' ? 'TREINOS LIVRES' : slug==='tematicas' ? 'AULAS TEMÁTICAS' : slug?.toUpperCase().replace(/-/g,' ') || 'CATEGORIA'
   const catKey = map[slug || ''] 
   const list = catKey ? treinos.filter(t=> t.cat===catKey) : treinos
@@ -59,9 +62,18 @@ export default function Categoria(){
           })}
         </div>
         <div className="mt-4 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 p-4 max-w-[400px]">
-          <div className="flex items-center gap-2 text-white text-sm"><div className="w-8 h-8 rounded-full bg-zinc-800 grid place-items-center">⬇</div> <span>A transferir…</span></div>
-          <div className="mt-3 h-2 bg-zinc-800 rounded-full overflow-hidden"><div className="h-full w-[89%] bg-[#FF7A1A]"/></div>
-          <div className="text-center text-[#FF7A1A] text-sm font-bold mt-2">89%</div>
+          <div className="flex items-center gap-2 text-white text-sm">
+            <div className={`w-8 h-8 rounded-full grid place-items-center ${pausado?'bg-zinc-700':'bg-zinc-800'}`}>{pausado?'⏸':'⬇'}</div>
+            <span>{pausado ? 'Pausado' : 'A transferir…'} {!pausado && dl<100 ? `${dl}%` : dl>=100 ? 'Concluído ✓' : ''}</span>
+            <button onClick={()=>setPausado(v=>!v)} className="ml-auto text-xs font-bold border border-white/20 px-3 py-1 rounded-full hover:bg-white/10 cursor-pointer">{pausado?'Retomar':'Pausar'}</button>
+          </div>
+          <div className="mt-3 h-2 bg-zinc-800 rounded-full overflow-hidden cursor-pointer" onClick={()=>setDl(v=> v>=100? 0 : Math.min(100,v+5))}>
+            <div className="h-full bg-[#FF7A1A] transition-all" style={{width:`${dl}%`}}/>
+          </div>
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-center text-[#FF7A1A] text-sm font-bold">{dl}%</span>
+            <button onClick={()=>setDl(v=> Math.min(100,v+10))} className="text-xs text-zinc-400 hover:text-white underline cursor-pointer">+10% (demo)</button>
+          </div>
         </div>
       </div>
     </div>

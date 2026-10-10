@@ -1,9 +1,15 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronRight } from 'lucide-react'
 import { useAppState } from '../context/AppState'
 
 export default function Perfil(){
   const { points } = useAppState()
+  const [bio,setBio]=useState(()=> localStorage.getItem('tbu:bio') === '1')
+  const [toast,setToast]=useState<string|null>(null)
+  useEffect(()=>{ localStorage.setItem('tbu:bio', bio ? '1':'0') },[bio])
+  useEffect(()=>{ if(toast){ const t=setTimeout(()=>setToast(null),2200); return ()=>clearTimeout(t)}},[toast])
+  const show=(m:string)=> setToast(m)
   return (
     <div className="pb-6 bg-[#FAFAF8] min-h-full">
       <div className="bg-white p-4 md:p-6 flex items-center gap-4 border-b border-zinc-200">
@@ -20,29 +26,33 @@ export default function Perfil(){
       </div>
 
       <div className="p-4 md:p-6 max-w-[800px] mx-auto space-y-4">
-        <Link to="/objetivo" className="block bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between hover:shadow-sm transition-shadow">
+        <Link to="/objetivo" className="block bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between hover:shadow-sm hover:border-orange-200 transition-all cursor-pointer">
           <span className="text-sm font-semibold text-zinc-900">🎯 Perfil de Condição Física</span><ChevronRight size={18} className="text-zinc-400"/>
         </Link>
-        <div className="block bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between opacity-60">
+        <button onClick={()=>show('Guia: aquece 5 min • hidrata • usa gel condutor • começa em intensidade 1')} className="w-full text-left bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between hover:shadow-sm hover:border-orange-200 transition-all cursor-pointer">
           <span className="text-sm font-semibold text-zinc-900">📋 Guia de Preparação Inicial</span><ChevronRight size={18} className="text-zinc-400"/>
-        </div>
+        </button>
 
         <div className="text-xs font-bold text-zinc-500 tracking-widest mt-2">Dispositivos</div>
-        <Link to="/ems" className="block bg-white rounded-2xl border border-[#FF7A1A] p-4 flex items-center justify-between hover:shadow-sm transition-shadow">
+        <Link to="/ems" className="block bg-white rounded-2xl border border-[#FF7A1A] p-4 flex items-center justify-between hover:shadow-sm transition-shadow cursor-pointer">
           <span className="text-sm font-semibold text-[#FF7A1A]">📱 My EMS Control</span><ChevronRight size={18} className="text-[#FF7A1A]"/>
         </Link>
 
         <div className="text-xs font-bold text-zinc-500 tracking-widest mt-4">Suporte</div>
-        <div className="block bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between">
+        <button onClick={()=>show('Centro de Ajuda: escreve para suporte@techbody.pt • WhatsApp disponível no site')} className="w-full text-left bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between hover:shadow-sm hover:border-orange-200 transition-all cursor-pointer">
           <span className="text-sm font-semibold text-zinc-900">❓ Centro de Ajuda</span><ChevronRight size={18} className="text-zinc-400"/>
-        </div>
+        </button>
 
         <div className="text-xs font-bold text-zinc-500 tracking-widest mt-4">Aplicação</div>
         <div className="bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between">
           <span className="text-sm font-semibold text-zinc-900">🔒 Login Biométrico</span>
-          <div className="w-11 h-6 rounded-full bg-[#FF7A1A] p-0.5 flex justify-end"><div className="w-5 h-5 rounded-full bg-white"/></div>
+          <button onClick={()=>{ setBio(v=>!v); show(!bio ? 'Login biométrico activado' : 'Login biométrico desactivado')}} className={`w-11 h-6 rounded-full p-0.5 flex transition-colors cursor-pointer ${bio?'bg-[#FF7A1A] justify-end':'bg-zinc-300 justify-start'}`}>
+            <div className="w-5 h-5 rounded-full bg-white shadow"/>
+          </button>
         </div>
+        <p className="text-xs text-zinc-400 px-1">O interruptor guarda em <code className="bg-zinc-100 px-1 rounded">tbu:bio</code> e funciona mesmo offline.</p>
       </div>
+      {toast && <div className="fixed bottom-[80px] md:bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg z-50 text-center max-w-[90%]">{toast}</div>}
     </div>
   )
 }

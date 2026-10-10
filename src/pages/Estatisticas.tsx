@@ -9,6 +9,7 @@ export default function Estatisticas(){
   const [tab,setTab]=useState('Mês Atual')
   const [diaSel,setDiaSel]=useState(11)
   const [mes,setMes]=useState(2)
+  const [showCal,setShowCal]=useState(true)
   const tabs=['Dia Atual','Semana','Últimos 15 dias','Mês Atual']
   const filtered = useMemo(()=>{
     if(tab==='Dia Atual') return estatisticasMes.filter(e=> e.data.includes('11 de mar') || e.hora.includes('11:'))
@@ -28,7 +29,7 @@ export default function Estatisticas(){
         <h1 className="text-center md:text-left text-sm md:text-base font-bold tracking-widest text-[#FF7A1A]">ESTATÍSTICAS</h1>
         <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1">
           {tabs.map(t=>(
-            <button key={t} onClick={()=>setTab(t)} className={`shrink-0 px-3.5 py-2 rounded-full text-xs md:text-sm font-semibold border transition-colors ${tab===t?'bg-[#FF7A1A] text-white border-[#FF7A1A]':'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'}`}>{t}</button>
+            <button key={t} onClick={()=>setTab(t)} className={`shrink-0 px-3.5 py-2 rounded-full text-xs md:text-sm font-semibold border transition-colors cursor-pointer ${tab===t?'bg-[#FF7A1A] text-white border-[#FF7A1A]':'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'}`}>{t}</button>
           ))}
         </div>
       </div>
@@ -36,20 +37,24 @@ export default function Estatisticas(){
         <div className="bg-white rounded-2xl border border-zinc-200 p-4 md:p-5 max-w-[720px] mx-auto">
           <div className="flex items-center justify-between">
             <span className="text-sm font-bold text-zinc-900">📅 {meses[mes]} de 2026</span>
-            <button className="text-xs text-zinc-500 hover:text-zinc-700">Ocultar calendário</button>
+            <button onClick={()=>setShowCal(v=>!v)} className="text-xs font-semibold text-[#FF7A1A] hover:underline cursor-pointer">{showCal ? 'Ocultar calendário' : 'Mostrar calendário'}</button>
           </div>
-          <div className="flex items-center justify-between mt-3">
-            <button onClick={()=>setMes(m=> Math.max(0,m-1))} className="w-8 h-8 rounded-full hover:bg-zinc-100 grid place-items-center"><ChevronLeft size={16} className="text-zinc-500"/></button>
-            <span className="text-xs text-zinc-500">{tab}</span>
-            <button onClick={()=>setMes(m=> Math.min(11,m+1))} className="w-8 h-8 rounded-full hover:bg-zinc-100 grid place-items-center"><ChevronRight size={16} className="text-zinc-500"/></button>
-          </div>
-          <div className="grid grid-cols-7 gap-1 text-center mt-3">
-            {['domingo','segunda','terça','quarta','quinta','sexta','sábado'].map(d=><span key={d} className="text-[10px] md:text-xs text-zinc-400 capitalize py-1">{d.slice(0,3)}</span>)}
-            {Array.from({length:31},(_,i)=>i+1).map(n=>{
-              const sel=n===diaSel
-              return <button key={n} onClick={()=>setDiaSel(n)} className={`h-8 md:h-9 grid place-items-center text-xs md:text-sm rounded-full transition-colors ${sel?'bg-[#FF7A1A] text-white font-bold shadow-sm':'text-zinc-700 hover:bg-zinc-100'}`}>{n}</button>
-            })}
-          </div>
+          {showCal && (
+            <>
+              <div className="flex items-center justify-between mt-3">
+                <button onClick={()=>setMes(m=> Math.max(0,m-1))} className="w-8 h-8 rounded-full hover:bg-zinc-100 grid place-items-center cursor-pointer"><ChevronLeft size={16} className="text-zinc-500"/></button>
+                <span className="text-xs text-zinc-500">{tab} • dia {diaSel}</span>
+                <button onClick={()=>setMes(m=> Math.min(11,m+1))} className="w-8 h-8 rounded-full hover:bg-zinc-100 grid place-items-center cursor-pointer"><ChevronRight size={16} className="text-zinc-500"/></button>
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center mt-3">
+                {['domingo','segunda','terça','quarta','quinta','sexta','sábado'].map(d=><span key={d} className="text-[10px] md:text-xs text-zinc-400 capitalize py-1">{d.slice(0,3)}</span>)}
+                {Array.from({length:31},(_,i)=>i+1).map(n=>{
+                  const sel=n===diaSel
+                  return <button key={n} onClick={()=>setDiaSel(n)} className={`h-8 md:h-9 grid place-items-center text-xs md:text-sm rounded-full transition-colors cursor-pointer ${sel?'bg-[#FF7A1A] text-white font-bold shadow-sm':'text-zinc-700 hover:bg-zinc-100'}`}>{n}</button>
+                })}
+              </div>
+            </>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
             <div className="bg-purple-600 text-white rounded-xl p-3 md:p-4">
               <div className="text-[11px] md:text-xs opacity-80">Treinos</div>
@@ -89,6 +94,7 @@ export default function Estatisticas(){
                 </div>
               </div>
             ))}
+            {filtered.length===0 && <div className="text-center text-sm text-zinc-500 py-8">Sem treinos neste período.</div>}
           </div>
           <div className="mt-6 flex justify-center">
             <Link to="/conquistas" className="text-sm font-bold text-[#FF7A1A] hover:underline">Ver Conquistas →</Link>
