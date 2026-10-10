@@ -1,44 +1,55 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Trophy } from 'lucide-react'
+import { Trophy, Star } from 'lucide-react'
 export default function Sucesso(){
+  const [stars,setStars]=useState(0)
+  const [efeito,setEfeito]=useState<string|null>(null)
   return (
-    <div className="min-h-full bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl w-full max-w-[340px] p-6 text-center relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-20 h-20 bg-orange-100 rounded-full opacity-60"/>
-        <div className="mx-auto w-8 h-8 rounded-full bg-orange-100 text-[#FF7A1A] grid place-items-center text-sm">🎉</div>
-        <p className="text-[11px] text-zinc-500 mt-2">Parabéns! Concluíste este treino com sucesso.</p>
-        <div className="mx-auto mt-3 w-12 h-12 rounded-full bg-orange-50 grid place-items-center text-[#FF7A1A]"><Trophy size={22}/></div>
-        <div className="mt-3 inline-flex items-center gap-1 bg-[#FFF7ED] border border-orange-200 text-[#FF7A1A] text-xs font-bold px-3 py-1.5 rounded-full">🏅 +50 pontos</div>
-        <div className="flex gap-2 mt-4">
+    <div className="min-h-full bg-gradient-to-b from-black/80 to-black/60 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-[400px] p-6 md:p-7 text-center relative overflow-hidden shadow-2xl">
+        <div className="mx-auto w-9 h-9 rounded-full bg-orange-100 text-[#FF7A1A] grid place-items-center">🎉</div>
+        <p className="text-xs text-zinc-500 mt-2">Parabéns! Concluíste este treino com sucesso.</p>
+        <div className="mx-auto mt-3 w-14 h-14 rounded-full bg-orange-50 grid place-items-center text-[#FF7A1A]"><Trophy size={24}/></div>
+        <div className="mt-3 inline-flex items-center gap-1.5 bg-[#FFF7ED] border border-orange-200 text-[#FF7A1A] text-sm font-bold px-4 py-2 rounded-full">🏅 +50 pontos</div>
+        <div className="flex gap-3 mt-5">
           <div className="flex-1 bg-sky-50 border border-sky-100 rounded-xl p-3">
-            <div className="text-sky-600 text-xs">⏱</div><div className="text-sm font-bold text-zinc-900">29 min</div><div className="text-[11px] text-zinc-500">Tempo</div>
+            <div className="text-sky-600 text-xs">⏱</div><div className="text-base font-bold text-zinc-900">29 min</div><div className="text-xs text-zinc-500">Tempo</div>
           </div>
           <div className="flex-1 bg-red-50 border border-red-100 rounded-xl p-3">
-            <div className="text-red-500 text-xs">🔥</div><div className="text-sm font-bold text-zinc-900">233 kcal</div><div className="text-[11px] text-zinc-500">Calorias</div>
+            <div className="text-red-500 text-xs">🔥</div><div className="text-base font-bold text-zinc-900">233 kcal</div><div className="text-xs text-zinc-500">Calorias</div>
           </div>
         </div>
         <div className="mt-6">
-          <div className="text-xs font-bold text-zinc-900">Como foi o treino?</div>
-          <p className="text-[11px] text-zinc-500">Partilha a tua experiência sobre esta sessão</p>
-          <div className="mt-3">
-            <div className="text-[11px] font-semibold text-red-500">❤ Gostou do treino?</div>
-            <div className="flex justify-center gap-1 mt-1 text-zinc-300 text-lg">
-              {Array.from({length:5}).map((_,i)=><span key={i}>☆</span>)}
+          <div className="text-sm font-bold text-zinc-900">Como foi o treino?</div>
+          <p className="text-xs text-zinc-500">Partilha a tua experiência sobre esta sessão</p>
+          <div className="mt-4">
+            <div className="text-xs font-semibold text-zinc-700">❤ Gostou do treino?</div>
+            <div className="flex justify-center gap-1 mt-2">
+              {Array.from({length:5}).map((_,i)=>(
+                <button key={i} onClick={()=>setStars(i+1)} className="p-1 cursor-pointer">
+                  <Star size={26} className={i < stars ? 'fill-[#FF7A1A] text-[#FF7A1A]' : 'text-zinc-300'}/>
+                </button>
+              ))}
             </div>
-            <div className="text-[11px] font-semibold text-zinc-700 mt-3">⚡ Este treino foi…</div>
-            <div className="flex justify-center gap-2 mt-2">
-              {['Muito fácil','Leve','Moderado','Cansativo','Exausto'].map(l=>(
-                <span key={l} className="text-[10px] leading-tight text-center text-zinc-500 w-12">{l}<br/>😐</span>
+            <div className="text-xs font-semibold text-zinc-700 mt-4">⚡ Este treino foi…</div>
+            <div className="flex justify-center gap-1.5 mt-2">
+              {[
+                {l:'Muito fácil',e:'😊'},
+                {l:'Leve',e:'🙂'},
+                {l:'Moderado',e:'😐'},
+                {l:'Cansativo',e:'😤'},
+                {l:'Exausto',e:'🥵'},
+              ].map(o=>(
+                <button key={o.l} onClick={()=>setEfeito(o.l)} className={`flex-1 py-2 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${efeito===o.l?'bg-[#FF7A1A] text-white border-[#FF7A1A]':'bg-zinc-50 text-zinc-600 border-zinc-200 hover:bg-white'}`}>
+                  <div className="text-base">{o.e}</div>{o.l}
+                </button>
               ))}
             </div>
           </div>
         </div>
-        <div className="flex gap-2 mt-6">
-          <Link to="/" className="flex-1 border border-orange-200 text-orange-600 rounded-full py-2.5 text-sm font-bold">Pular</Link>
-          <Link to="/" className="flex-1 bg-[#FF7A1A] text-white rounded-full py-2.5 text-sm font-bold">Salvar</Link>
-        </div>
-        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-1 opacity-40">
-          {['🎉','✨','🎊'].map((e,i)=><span key={i}>{e}</span>)}
+        <div className="flex gap-3 mt-6">
+          <Link to="/" className="flex-1 border border-zinc-200 text-zinc-700 rounded-full py-3 text-sm font-bold hover:bg-zinc-50 text-center">Pular</Link>
+          <Link to="/" className="flex-1 bg-[#FF7A1A] hover:bg-orange-600 text-white rounded-full py-3 text-sm font-bold text-center">Salvar</Link>
         </div>
       </div>
     </div>

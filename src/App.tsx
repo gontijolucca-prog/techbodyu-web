@@ -15,7 +15,7 @@ import Sucesso from './pages/Sucesso'
 
 function Shell(){
   const loc = useLocation()
-  const hideNav = loc.pathname.startsWith('/treino') || loc.pathname==='/sucesso' || loc.pathname==='/objetivo'
+  const hideNav = loc.pathname==='/sucesso' || loc.pathname==='/objetivo'
   return (
     <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
       <TopNav />
