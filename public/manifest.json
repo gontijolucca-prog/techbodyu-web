@@ -1,0 +1,16 @@
+{
+  "name": "TechBody U",
+  "short_name": "TechBody U",
+  "description": "Treino inteligente com EMS — força, bem-estar e recuperação",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#FAFAF8",
+  "theme_color": "#FF7A1A",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/assets/images/applogo.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/images/app_icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

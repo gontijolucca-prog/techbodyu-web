@@ -1,4 +1,5 @@
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'motion/react'
 import BottomNav from './components/BottomNav'
 import TopNav from './components/TopNav'
 import { AppStateProvider } from './context/AppState'
@@ -13,32 +14,42 @@ import Perfil from './pages/Perfil'
 import Objetivo from './pages/Objetivo'
 import Sucesso from './pages/Sucesso'
 
+function AnimatedRoutes(){
+  const loc = useLocation()
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div key={loc.pathname} initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} transition={{duration:0.22, ease:[0.2,0,0,1]}} className="flex-1 flex flex-col">
+        <Routes location={loc}>
+          <Route path="/" element={<Home/>} />
+          <Route path="/categoria/:slug" element={<Categoria/>} />
+          <Route path="/colecao/:id" element={<Colecao/>} />
+          <Route path="/treino/:id" element={<Treino/>} />
+          <Route path="/estatisticas" element={<Estatisticas/>} />
+          <Route path="/conquistas" element={<Conquistas/>} />
+          <Route path="/ems" element={<EMSControl/>} />
+          <Route path="/perfil" element={<Perfil/>} />
+          <Route path="/objetivo" element={<Objetivo/>} />
+          <Route path="/sucesso" element={<Sucesso/>} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
 function Shell(){
   const loc = useLocation()
   const hideNav = loc.pathname==='/sucesso' || loc.pathname==='/objetivo'
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col select-none">
       <TopNav />
       <div className="flex-1 w-full max-w-[1280px] mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-6 flex flex-col">
-        <div className="flex-1 bg-white md:rounded-2xl md:border md:border-zinc-200 md:shadow-sm overflow-hidden flex flex-col min-h-[600px]">
-          <div className="flex-1 overflow-y-auto">
-            <Routes>
-              <Route path="/" element={<Home/>} />
-              <Route path="/categoria/:slug" element={<Categoria/>} />
-              <Route path="/colecao/:id" element={<Colecao/>} />
-              <Route path="/treino/:id" element={<Treino/>} />
-              <Route path="/estatisticas" element={<Estatisticas/>} />
-              <Route path="/conquistas" element={<Conquistas/>} />
-              <Route path="/ems" element={<EMSControl/>} />
-              <Route path="/perfil" element={<Perfil/>} />
-              <Route path="/objetivo" element={<Objetivo/>} />
-              <Route path="/sucesso" element={<Sucesso/>} />
-            </Routes>
+        <div className="flex-1 bg-white md:rounded-[20px] md:border md:border-zinc-200 md:shadow-[0_8px_32px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col min-h-[640px] relative">
+          <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' as any }}>
+            <AnimatedRoutes/>
           </div>
         </div>
       </div>
       {!hideNav && <BottomNav/>}
-      <div className="h-[64px] md:hidden shrink-0" style={{display: hideNav ? 'none' : 'block'}}/>
+      <div className="h-[72px] md:hidden shrink-0" style={{display: hideNav ? 'none' : 'block', paddingBottom: 'env(safe-area-inset-bottom)'}}/>
     </div>
   )
 }

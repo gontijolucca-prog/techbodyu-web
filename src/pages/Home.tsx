@@ -47,11 +47,11 @@ export default function Home(){
           <h2 className="text-[15px] md:text-base font-bold text-zinc-900">Recomendados</h2>
           <span className="text-xs text-zinc-400">{fTreinos.length} treinos</span>
         </div>
-        <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="mt-3 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{scrollbarWidth:'none', msOverflowStyle:'none'}}>
           {fTreinos.slice(0,8).map(t=>{
             const done = completed.includes(t.id)
             return (
-              <Link key={t.id} to={`/treino/${t.id}`} className="rounded-2xl overflow-hidden bg-white border border-zinc-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all group cursor-pointer">
+              <Link key={t.id} to={`/treino/${t.id}`} className="min-w-[170px] md:min-w-[220px] snap-start shrink-0 rounded-2xl overflow-hidden bg-white border border-zinc-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all group cursor-pointer">
                 <div className="h-[140px] md:h-[160px] relative bg-zinc-900">
                   <img src={t.thumb} alt={t.titulo} className="w-full h-full object-cover opacity-90 group-hover:scale-[1.02] transition-transform"/>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"/>
@@ -82,9 +82,9 @@ export default function Home(){
           <h2 className="text-[15px] md:text-base font-bold text-zinc-900">Coleções</h2>
           <span className="text-xs text-zinc-400">{fColecoes.length}</span>
         </div>
-        <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="mt-3 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{scrollbarWidth:'none', msOverflowStyle:'none'}}>
           {fColecoes.map(c=>(
-            <Link key={c.id} to={`/colecao/${c.id}`} className="rounded-2xl overflow-hidden bg-white border border-zinc-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer">
+            <Link key={c.id} to={`/colecao/${c.id}`} className="min-w-[160px] md:min-w-[200px] snap-start shrink-0 rounded-2xl overflow-hidden bg-white border border-zinc-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer">
               <div className="h-[130px] md:h-[150px] relative">
                 <img src={c.thumb} alt={c.titulo} className="w-full h-full object-cover"/>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"/>
@@ -104,9 +104,9 @@ export default function Home(){
           <h2 className="text-[15px] md:text-base font-bold text-zinc-900">Categorias</h2>
           <span className="text-xs text-zinc-400">{fCategorias.length}</span>
         </div>
-        <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+        <div className="mt-3 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{scrollbarWidth:'none', msOverflowStyle:'none'}}>
           {fCategorias.map(cat=>(
-            <Link key={cat.slug} to={`/categoria/${cat.slug}`} className="rounded-2xl overflow-hidden h-[120px] md:h-[140px] relative border border-zinc-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all group cursor-pointer">
+            <Link key={cat.slug} to={`/categoria/${cat.slug}`} className="min-w-[150px] md:min-w-[170px] snap-start shrink-0 rounded-2xl overflow-hidden h-[120px] md:h-[140px] relative border border-zinc-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all group cursor-pointer">
               <img src={cat.thumb} alt={cat.titulo} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform"/>
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"/>
               <div className="absolute bottom-2.5 left-3 right-3 text-white text-[12px] md:text-[13px] font-semibold leading-tight">{cat.titulo}</div>
@@ -121,11 +121,11 @@ export default function Home(){
           <h2 className="text-[15px] md:text-base font-bold text-zinc-900">Treinos Recentes</h2>
           <Link to="/estatisticas" className="text-sm text-[#FF7A1A] font-semibold hover:underline cursor-pointer">Ver tudo</Link>
         </div>
-        <div className="mt-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
+        <div className="mt-3 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none" style={{scrollbarWidth:'none', msOverflowStyle:'none'}}>
           {fTreinos.slice(0,5).map(t=>{
             const done = completed.includes(t.id)
             return (
-              <Link key={t.id+"r"} to={`/treino/${t.id}`} className="rounded-2xl overflow-hidden bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all cursor-pointer">
+              <Link key={t.id+"r"} to={`/treino/${t.id}`} className="min-w-[150px] md:min-w-[170px] snap-start shrink-0 rounded-2xl overflow-hidden bg-white border border-zinc-200 shadow-sm hover:shadow-md transition-all cursor-pointer">
                 <div className="h-[100px] md:h-[110px] relative bg-zinc-900">
                   <img src={t.thumb} alt={t.titulo} className="w-full h-full object-cover opacity-90"/>
                   <div className="absolute inset-0 grid place-items-center"><div className="w-8 h-8 rounded-full bg-[#FF7A1A] grid place-items-center text-white text-xs">▶</div></div>
