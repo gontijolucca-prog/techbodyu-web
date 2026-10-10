@@ -15,8 +15,21 @@ export default function Categoria(){
   const { completed } = useAppState()
   const title = slug==='perda-de-peso' ? 'PERDA DE PESO' : slug==='forca' ? 'FORÇA E TONIFICAÇÃO' : slug==='saude' ? 'SAÚDE E BEM ESTAR' : slug==='livres' ? 'TREINOS LIVRES' : slug==='tematicas' ? 'AULAS TEMÁTICAS' : slug?.toUpperCase().replace(/-/g,' ') || 'CATEGORIA'
   const catKey = map[slug || ''] 
-  const list = catKey ? treinos.filter(t=> t.cat===catKey) : treinos
-  const show = list.length? list : treinos.slice(0,4)
+  const list = catKey ? treinos.filter(t=> t.cat===catKey) : []
+  const show = catKey ? list : treinos.slice(0,4)
+  if(catKey && list.length===0) return (
+    <div className="pb-6 bg-[#FAFAF8] min-h-full">
+      <div className="bg-white border-b border-zinc-200 px-4 md:px-6 py-3 flex items-center gap-3">
+        <Link to="/" className="w-8 h-8 rounded-full bg-[#FF7A1A] text-white grid place-items-center"><ChevronLeft size={18}/></Link>
+        <h1 className="flex-1 text-center text-sm font-bold text-[#FF7A1A]">{title}</h1><span className="w-8"/>
+      </div>
+      <div className="p-6 text-center max-w-[560px] mx-auto mt-8 bg-white rounded-2xl border border-zinc-200">
+        <p className="font-semibold">Sem treinos nesta categoria</p>
+        <p className="text-sm text-zinc-500 mt-1">Categoria “{slug}” não tem treinos.</p>
+        <Link to="/" className="inline-block mt-4 bg-[#FF7A1A] text-white rounded-full px-5 py-2.5 text-sm font-bold">Ver todos</Link>
+      </div>
+    </div>
+  )
   return (
     <div className="pb-6 bg-[#FAFAF8] min-h-full">
       <div className="bg-white border-b border-zinc-200 px-4 md:px-6 py-3">

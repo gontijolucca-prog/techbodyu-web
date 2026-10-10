@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import BottomNav from './components/BottomNav'
@@ -13,9 +14,12 @@ import EMSControl from './pages/EMSControl'
 import Perfil from './pages/Perfil'
 import Objetivo from './pages/Objetivo'
 import Sucesso from './pages/Sucesso'
+import NotFound from './pages/NotFound'
 
 function AnimatedRoutes(){
   const loc = useLocation()
+  // ponytail: scroll to top on route change
+  useEffect(()=>{ window.scrollTo({top:0, behavior:'instant' as any}) },[loc.pathname])
   return (
     <AnimatePresence mode="wait">
       <motion.div key={loc.pathname} initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} transition={{duration:0.22, ease:[0.2,0,0,1]}} className="flex-1 flex flex-col">
@@ -30,6 +34,7 @@ function AnimatedRoutes(){
           <Route path="/perfil" element={<Perfil/>} />
           <Route path="/objetivo" element={<Objetivo/>} />
           <Route path="/sucesso" element={<Sucesso/>} />
+          <Route path="*" element={<NotFound/>} />
         </Routes>
       </motion.div>
     </AnimatePresence>

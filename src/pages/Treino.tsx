@@ -9,7 +9,17 @@ export default function Treino(){
   const { id } = useParams()
   const nav = useNavigate()
   const { toggleComplete } = useAppState()
-  const t = treinos.find(x=>x.id===id) || treinos[0]
+  const t = treinos.find(x=>x.id===id)
+  if(!t) return (
+    <div className="min-h-[520px] grid place-items-center p-6 text-center bg-[#FAFAF8]">
+      <div className="bg-white border border-zinc-200 rounded-2xl p-8 max-w-[420px] w-full">
+        <div className="w-12 h-12 rounded-full bg-zinc-100 grid place-items-center mx-auto">?</div>
+        <h1 className="font-bold mt-3">Treino não encontrado</h1>
+        <p className="text-sm text-zinc-500 mt-1">ID “{id}” não existe.</p>
+        <Link to="/" className="inline-block mt-4 bg-[#FF7A1A] text-white rounded-full px-5 py-2.5 text-sm font-bold">Voltar</Link>
+      </div>
+    </div>
+  )
   const [suit,setSuit]=useState(false)
   const [intensity,setIntensity]=useState(5)
   const [paused,setPaused]=useState(true)

@@ -12,15 +12,17 @@ type State = {
 }
 const Ctx = createContext<State>(null as any)
 
+const safeGet=(k:string, fb:any)=>{ try{ const s=localStorage.getItem(k); return s? JSON.parse(s): fb }catch{ return fb } }
+const safeGetStr=(k:string, fb:string)=>{ try{ return localStorage.getItem(k) ?? fb }catch{ return fb } }
 export function AppStateProvider({children}:{children:ReactNode}){
-  const [points,setPoints]=useState(()=>{ const s=localStorage.getItem('tbu:points'); return s? parseInt(s): 275 })
-  const [completed,setCompleted]=useState<string[]>(()=>{ const s=localStorage.getItem('tbu:completed'); return s? JSON.parse(s): ['techpower1'] })
-  const [calibracoes,setCalibracoes]=useState<Record<string,number>>(()=>{ const s=localStorage.getItem('tbu:calib'); return s? JSON.parse(s): {} })
-  const [suitVals,setSuitVals]=useState<Record<string,number>>(()=>{ const s=localStorage.getItem('tbu:suit'); return s? JSON.parse(s): {} })
-  useEffect(()=>{ localStorage.setItem('tbu:points', String(points)) },[points])
-  useEffect(()=>{ localStorage.setItem('tbu:completed', JSON.stringify(completed)) },[completed])
-  useEffect(()=>{ localStorage.setItem('tbu:calib', JSON.stringify(calibracoes)) },[calibracoes])
-  useEffect(()=>{ localStorage.setItem('tbu:suit', JSON.stringify(suitVals)) },[suitVals])
+  const [points,setPoints]=useState(()=>{ const s=safeGetStr('tbu:points',''); return s? parseInt(s): 275 })
+  const [completed,setCompleted]=useState<string[]>(()=> safeGet('tbu:completed',['techpower1']))
+  const [calibracoes,setCalibracoes]=useState<Record<string,number>>(()=> safeGet('tbu:calib',{}))
+  const [suitVals,setSuitVals]=useState<Record<string,number>>(()=> safeGet('tbu:suit',{}))
+  useEffect(()=>{ try{ localStorage.setItem('tbu:points', String(points)) }catch{} },[points])
+  useEffect(()=>{ try{ localStorage.setItem('tbu:completed', JSON.stringify(completed)) }catch{} },[completed])
+  useEffect(()=>{ try{ localStorage.setItem('tbu:calib', JSON.stringify(calibracoes)) }catch{} },[calibracoes])
+  useEffect(()=>{ try{ localStorage.setItem('tbu:suit', JSON.stringify(suitVals)) }catch{} },[suitVals])
   const addPoints=(n:number)=> setPoints(p=>p+n)
   const toggleComplete=(id:string, pts:number)=>{ if(completed.includes(id)) return; setCompleted(c=>[...c,id]); addPoints(pts) }
   const setCalib=(k:string,v:number)=> setCalibracoes(s=>({...s,[k]:Math.max(0,Math.min(100,v))}))
