@@ -1,0 +1,5 @@
+@import "tailwindcss";
+* { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+html, body { background: #FAFAF8; margin:0; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
