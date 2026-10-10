@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { writeIntensity } from '../lib/ems-bluetooth'
+import { writeIntensity } from '../lib/ems-adapter'
 
 export type User = { nome: string; email: string; avatar: string }
 

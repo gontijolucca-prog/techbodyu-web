@@ -14,6 +14,7 @@ import Perfil from './pages/Perfil'
 import Objetivo from './pages/Objetivo'
 import Sucesso from './pages/Sucesso'
 import Auth from './pages/Auth'
+import Download from './pages/Download'
 
 function AnimatedRoutes(){
   const loc = useLocation()
@@ -22,6 +23,7 @@ function AnimatedRoutes(){
       <motion.div key={loc.pathname} initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} transition={{duration:0.22, ease:[0.2,0,0,1]}} className="flex-1 flex flex-col">
         <Routes location={loc}>
           <Route path="/auth" element={<Auth/>} />
+          <Route path="/download" element={<Download/>} />
           <Route path="/login" element={<Navigate to="/auth" replace/>} />
           <Route path="/signup" element={<Navigate to="/auth" replace/>} />
           <Route path="/" element={<RequireAuth><Home/></RequireAuth>} />
@@ -42,7 +44,7 @@ function AnimatedRoutes(){
 function RequireAuth({children}:{children:React.ReactNode}){
   const { user } = useAppState()
   const loc = useLocation()
-  if(!user && loc.pathname !== '/auth') return <Navigate to="/auth" replace />
+  if(!user && loc.pathname !== '/auth' && loc.pathname !== '/download') return <Navigate to="/auth" replace />
   return <>{children}</>
 }
 function Shell(){

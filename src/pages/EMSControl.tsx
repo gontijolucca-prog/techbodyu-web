@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, Minus, Plus, Bluetooth, Droplets, Power, CheckCircle2, Battery, Unplug, AlertTriangle } from 'lucide-react'
 import { useAppState } from '../context/AppState'
-import { isBluetoothSupported, requestEMSDevice, requestAnyDevice, connectDevice, readBattery, discoverServices, writeIntensity } from '../lib/ems-bluetooth'
+import { isBluetoothSupported, requestEMSDevice, requestAnyDevice, connectDevice, readBattery, discoverServices, writeIntensity } from '../lib/ems-adapter'
 
 export default function EMSControl(){
   const { calibracoes, setCalib, bleConnected, bleName, bleBattery, bleServer, setBleConnection, clearBle, demoMode, setDemoMode } = useAppState() as any

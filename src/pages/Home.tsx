@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
 import { colecoes, categorias, treinos } from '../data/mock'
 import { useAppState } from '../context/AppState'
+import InstallPWA from '../components/InstallPWA'
 
 export default function Home(){
   const { points, completed, user } = useAppState()
@@ -41,6 +42,9 @@ export default function Home(){
           <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Pesquisar treinos, coleções…" className="w-full bg-zinc-100 rounded-full pl-10 pr-10 py-3 text-[14px] placeholder:text-zinc-400 outline-none focus:bg-white focus:ring-2 focus:ring-[#FF7A1A]/20 focus:border-[#FF7A1A] border border-transparent"/>
           {q && <button onClick={()=>setQ('')} className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-zinc-200 grid place-items-center hover:bg-zinc-300"><X size={14}/></button>}
         </div>
+      </div>
+      <div className="px-4 md:px-6 mt-4 max-w-[640px]">
+        <InstallPWA/>
       </div>
 
       {!hasResults ? <div className="px-4 md:px-6 mt-8"><div className="text-center py-12 bg-white rounded-2xl border border-zinc-200"><p className="text-zinc-900 font-semibold">Nenhum resultado para "{q}"</p><p className="text-sm text-zinc-500 mt-1">Tenta "TechPower", "Recovery" ou "Strength"</p><button onClick={()=>setQ('')} className="mt-4 px-5 py-2 rounded-full bg-[#FF7A1A] text-white text-sm font-bold">Limpar pesquisa</button></div></div> : <>
