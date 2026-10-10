@@ -1,8 +1,10 @@
 @import "tailwindcss";
 * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-html, body { background: #FAFAF8; margin:0; }
+html, body { background: #FAFAF8; margin:0; height:auto; min-height:100%; overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior-y:auto; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
+#root { min-height:100vh; }
+.overflow-x-auto { touch-action: pan-x pan-y; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
 img[src*="c2.png"], img[src*="c3.png"], img[src*="c4.png"], img[src*="c5.png"] {
   filter: blur(0.9px) contrast(1.08) saturate(1.04);
   image-rendering: auto;

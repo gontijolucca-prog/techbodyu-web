@@ -39,13 +39,11 @@ function Shell(){
   const loc = useLocation()
   const hideNav = loc.pathname==='/sucesso' || loc.pathname==='/objetivo'
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col select-none">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
       <TopNav />
-      <div className="flex-1 w-full max-w-[1280px] mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-6 flex flex-col">
-        <div className="flex-1 bg-white md:rounded-[20px] md:border md:border-zinc-200 md:shadow-[0_8px_32px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col min-h-[640px] relative">
-          <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' as any }}>
-            <AnimatedRoutes/>
-          </div>
+      <div className="w-full max-w-[1280px] mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-6 flex-1">
+        <div className="bg-white md:rounded-[20px] md:border md:border-zinc-200 md:shadow-[0_8px_32px_rgba(0,0,0,0.06)] min-h-[640px] relative">
+          <AnimatedRoutes/>
         </div>
       </div>
       {!hideNav && <BottomNav/>}
