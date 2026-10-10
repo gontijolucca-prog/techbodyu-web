@@ -1,6 +1,5 @@
-import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, Info } from 'lucide-react'
+import { ChevronLeft, Info, Play } from 'lucide-react'
 import { treinos } from '../data/mock'
 import { useAppState } from '../context/AppState'
 
@@ -14,8 +13,6 @@ const map: Record<string,string> = {
 export default function Categoria(){
   const { slug } = useParams()
   const { completed } = useAppState()
-  const [dl,setDl]=useState(89)
-  const [pausado,setPausado]=useState(false)
   const title = slug==='perda-de-peso' ? 'PERDA DE PESO' : slug==='forca' ? 'FORÇA E TONIFICAÇÃO' : slug==='saude' ? 'SAÚDE E BEM ESTAR' : slug==='livres' ? 'TREINOS LIVRES' : slug==='tematicas' ? 'AULAS TEMÁTICAS' : slug?.toUpperCase().replace(/-/g,' ') || 'CATEGORIA'
   const catKey = map[slug || ''] 
   const list = catKey ? treinos.filter(t=> t.cat===catKey) : treinos
@@ -28,29 +25,29 @@ export default function Categoria(){
           <h1 className="flex-1 text-center md:text-left text-sm md:text-base font-bold tracking-wide text-[#FF7A1A]">{title}</h1>
           <span className="w-8"/>
         </div>
-        <div className="mt-3 flex gap-2 items-center bg-[#FFF7ED] border border-orange-100 rounded-xl px-3 py-2.5 max-w-[720px]">
-          <Info size={16} className="text-[#FF7A1A] shrink-0"/>
-          <p className="text-xs md:text-sm text-zinc-600 leading-tight">Descarrega os treinos para o teu dispositivo para os acederes offline e começar a treinar</p>
+        <div className="mt-3 flex gap-2 items-center bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5 max-w-[720px]">
+          <Info size={16} className="text-emerald-600 shrink-0"/>
+          <p className="text-xs md:text-sm text-zinc-700 leading-tight">Web • streaming imediato — sem downloads. Toca no treino e começa já.</p>
         </div>
       </div>
       <div className="p-4 md:p-6 max-w-[1100px] mx-auto">
-        <p className="text-xs text-zinc-500 mb-3">{show.length} treinos • {catKey || 'todos'}</p>
+        <p className="text-xs text-zinc-500 mb-3">{show.length} treinos • {catKey || 'todos'} • todos disponíveis</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {show.map(t=>{
             const done = completed.includes(t.id)
             return (
-              <Link key={t.id} to={`/treino/${t.id}`} className="block rounded-2xl overflow-hidden bg-white border border-zinc-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer">
+              <Link key={t.id} to={`/treino/${t.id}`} className="block rounded-2xl overflow-hidden bg-white border border-zinc-200 shadow-sm hover:shadow-md hover:border-orange-200 transition-all">
                 <div className="h-[180px] relative bg-zinc-900">
                   <img src={t.thumb} alt={t.titulo} className="w-full h-full object-cover opacity-95"/>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"/>
-                  <div className="absolute top-2.5 left-2.5 bg-black/60 backdrop-blur text-white text-xs px-2.5 py-1 rounded-full">◎ 25</div>
-                  {done && <div className="absolute top-2.5 right-2.5 bg-emerald-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">✓ Completed</div>}
-                  <div className="absolute inset-0 grid place-items-center"><div className="w-11 h-11 rounded-full bg-[#FF7A1A] grid place-items-center shadow-lg text-white">▶</div></div>
+                  <div className="absolute top-2.5 left-2.5 bg-black/60 backdrop-blur text-white text-xs px-2.5 py-1 rounded-full flex items-center gap-1"><Play size={10} fill="white"/> Streaming</div>
+                  {done && <div className="absolute top-2.5 right-2.5 bg-emerald-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">✓ Concluído</div>}
+                  <div className="absolute inset-0 grid place-items-center"><div className="w-11 h-11 rounded-full bg-[#FF7A1A] grid place-items-center shadow-lg text-white group-hover:scale-105 transition-transform">▶</div></div>
                   <div className="absolute bottom-2.5 left-2.5 right-2.5 flex gap-1.5 text-xs text-white">
                     <span className="bg-black/40 backdrop-blur px-2 py-1 rounded-full">{t.cal} Cal</span>
                     <span className="bg-black/40 backdrop-blur px-2 py-1 rounded-full">{t.nivel}</span>
                     <span className="bg-black/40 backdrop-blur px-2 py-1 rounded-full hidden sm:inline">{t.cat}</span>
-                    <span className="ml-auto bg-[#FF7A1A] px-2 py-1 rounded-full font-bold">{t.pts}</span>
+                    <span className="ml-auto bg-[#FF7A1A] px-2 py-1 rounded-full font-bold">{t.pts} pts</span>
                   </div>
                 </div>
                 <div className="p-4">
@@ -60,20 +57,6 @@ export default function Categoria(){
               </Link>
             )
           })}
-        </div>
-        <div className="mt-4 rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 p-4 max-w-[400px]">
-          <div className="flex items-center gap-2 text-white text-sm">
-            <div className={`w-8 h-8 rounded-full grid place-items-center ${pausado?'bg-zinc-700':'bg-zinc-800'}`}>{pausado?'⏸':'⬇'}</div>
-            <span>{pausado ? 'Pausado' : 'A transferir…'} {!pausado && dl<100 ? `${dl}%` : dl>=100 ? 'Concluído ✓' : ''}</span>
-            <button onClick={()=>setPausado(v=>!v)} className="ml-auto text-xs font-bold border border-white/20 px-3 py-1 rounded-full hover:bg-white/10 cursor-pointer">{pausado?'Retomar':'Pausar'}</button>
-          </div>
-          <div className="mt-3 h-2 bg-zinc-800 rounded-full overflow-hidden cursor-pointer" onClick={()=>setDl(v=> v>=100? 0 : Math.min(100,v+5))}>
-            <div className="h-full bg-[#FF7A1A] transition-all" style={{width:`${dl}%`}}/>
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-center text-[#FF7A1A] text-sm font-bold">{dl}%</span>
-            <button onClick={()=>setDl(v=> Math.min(100,v+10))} className="text-xs text-zinc-400 hover:text-white underline cursor-pointer">+10% (demo)</button>
-          </div>
         </div>
       </div>
     </div>

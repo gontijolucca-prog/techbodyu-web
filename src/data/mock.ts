@@ -65,12 +65,12 @@ export const conquistas = [
 export const objetivos = ['Perder Peso','Ganhar Massa Muscular','Tonificar Corpo','Melhorar Resistência','Recuperação Muscular','Fortalecer Core','Aumentar Força','Reduzir Gordura Localizada','Melhorar Postura','Condicionamento Físico Geral']
 
 export const colecaoPrimeiros = [
-  { n:1, titulo:'Pilates', leg:'8:00 • Beginner • Pilates', thumb:'/assets/images/start1.jpg', unlocked:true },
-  { n:2, titulo:'Conclui o Treino', leg:'Adaptação Anatómica I', thumb:'/assets/images/start2.jpg', unlocked:false },
-  { n:3, titulo:'Downloading...', leg:'27%', thumb:'/assets/images/start3.jpg', downloading:27 },
-  { n:4, titulo:'Adaptação Anatómica II', leg:'8:00 • Beginner • Strength', thumb:'/assets/images/b1.png', unlocked:false },
-  { n:5, titulo:'Conclui o Treino', leg:'para desbloquear', thumb:'/assets/images/tr2.png', unlocked:false },
-  { n:6, titulo:'Conclui o Treino', leg:'Treino de Força: Core', thumb:'/assets/images/tr3.png', unlocked:false },
-  { n:7, titulo:'Reforço Postura', leg:'', thumb:'/assets/images/tr4.png', unlocked:false },
-  { n:8, titulo:'Treino de Força', leg:'Core intensivo II', thumb:'/assets/images/tr5.png', unlocked:false },
+  { n:1, titulo:'Pilates', leg:'8:00 • Beginner', thumb:'/assets/images/start1.jpg', unlocked:true },
+  { n:2, titulo:'Adaptação Anatómica I', leg:'8:00 • Beginner • Strength', thumb:'/assets/images/start2.jpg', unlocked:true },
+  { n:3, titulo:'Adaptação Funcional', leg:'12:00 • Beginner • Mobility', thumb:'/assets/images/start3.jpg', unlocked:true },
+  { n:4, titulo:'Adaptação Anatómica II', leg:'8:00 • Beginner • Strength', thumb:'/assets/images/b1.png', unlocked:true },
+  { n:5, titulo:'Core Estável', leg:'15:00 • Beginner • Core', thumb:'/assets/images/tr2.png', unlocked:true },
+  { n:6, titulo:'Treino de Força: Core', leg:'18:00 • Intermediate', thumb:'/assets/images/tr3.png', unlocked:true },
+  { n:7, titulo:'Reforço Postura', leg:'14:00 • Beginner', thumb:'/assets/images/tr4.png', unlocked:true },
+  { n:8, titulo:'Treino de Força', leg:'Core intensivo II', thumb:'/assets/images/tr5.png', unlocked:true },
 ]
