@@ -3,3 +3,10 @@
 html, body { background: #FAFAF8; margin:0; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
+img[src*="c2.png"], img[src*="c3.png"], img[src*="c4.png"], img[src*="c5.png"] {
+  filter: blur(0.9px) contrast(1.08) saturate(1.04);
+  image-rendering: auto;
+}
+img[src*="tr1.png"], img[src*="tr2.png"], img[src*="tr3.png"], img[src*="tr4.png"], img[src*="tr5.png"], img[src*="tr6.png"] {
+  filter: blur(0.4px) contrast(1.05);
+}
