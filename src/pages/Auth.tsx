@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppState } from '../context/AppState'
+import { Download, Apple, Smartphone, Bluetooth, RefreshCw } from 'lucide-react'
 
 export default function Auth(){
   const { setUser } = useAppState()
@@ -10,7 +11,27 @@ export default function Auth(){
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [error,setError]=useState<string|null>(null)
+  const [deferred,setDeferred]=useState<any>(null)
+  const [,setIsIOS]=useState(false)
+  const [showAndroidTip,setShowAndroidTip]=useState(false)
+  const [showIOSInfo,setShowIOSInfo]=useState(false)
 
+  useEffect(()=>{
+    try{
+      const u = JSON.parse(localStorage.getItem('tbu:user')||'null')
+      if(u && u.email==='demo@techbody.pt'){
+        localStorage.removeItem('tbu:user')
+        const users = JSON.parse(localStorage.getItem('tbu:users')||'{}')
+        if(users['demo@techbody.pt']) { delete users['demo@techbody.pt']; localStorage.setItem('tbu:users', JSON.stringify(users)) }
+        setError('Conta demo desativada — cria a tua conta')
+        setTimeout(()=>setError(null),3000)
+      }
+    }catch{}
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && (navigator as any).maxTouchPoints>1))
+    const h = (e:any)=>{ e.preventDefault(); setDeferred(e) }
+    window.addEventListener('beforeinstallprompt', h)
+    return ()=> window.removeEventListener('beforeinstallprompt', h)
+  },[])
 
   const validate=()=>{
     if(!email.trim() || !email.includes('@')) return 'Email inválido'
@@ -24,6 +45,7 @@ export default function Auth(){
     if(e){ setError(e); setTimeout(()=>setError(null),2500); return }
     const stored = (()=>{ try{ return JSON.parse(localStorage.getItem('tbu:users')||'{}') }catch{return{}} })()
     const key=email.trim().toLowerCase()
+    if(key==='demo@techbody.pt'){ setError('Conta demo desativada — cria nova conta'); setTimeout(()=>setError(null),2500); return }
     if(mode==='signup'){
       stored[key]={ nome: nome.trim() || email.split('@')[0], email:key, password, avatar:'/assets/images/fitness-profile.jpg' }
       localStorage.setItem('tbu:users', JSON.stringify(stored))
@@ -40,10 +62,14 @@ export default function Auth(){
     }
   }
 
-  const demoLogin=()=>{
-    const u={ nome:'Luiz Santana', email:'demo@techbody.pt', avatar:'/assets/images/fitness-profile.jpg' }
-    setUser(u)
-    nav('/')
+  const handleAndroidInstall = async ()=>{
+    if(deferred){
+      deferred.prompt()
+      const c = await deferred.userChoice
+      if(c.outcome==='accepted') setDeferred(null)
+    } else {
+      setShowAndroidTip(v=>!v)
+    }
   }
 
   return (
@@ -55,7 +81,36 @@ export default function Auth(){
           <span className="text-xs text-zinc-400 ml-1">Web</span>
         </div>
       </div>
-      <div className="flex-1 flex items-start justify-center px-4 md:px-6 py-6 md:py-10">
+
+      <div className="flex-1 flex flex-col items-center px-4 md:px-6 py-6 md:py-8 gap-6">
+        <div className="w-full max-w-[640px] bg-white rounded-[20px] border border-zinc-200 shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-5 md:p-6">
+          <h2 className="text-base font-bold text-zinc-900 flex items-center gap-2"><Download size={18} className="text-[#FF7A1A]"/> Instalar TechBody U — funciona como app</h2>
+          <p className="text-xs text-zinc-500 mt-1">Instala em 1 toque. Depois funciona offline e updates vêm sozinhos.</p>
+          <div className="mt-4 grid md:grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-zinc-200 p-4 bg-zinc-50">
+              <div className="text-sm font-bold text-zinc-900 flex items-center gap-1.5"><Apple size={14}/> iPhone — app nativa</div>
+              <p className="text-xs text-zinc-600 mt-1">100% com Bluetooth EMS. Sem App Store.</p>
+              <div className="mt-3 space-y-2">
+                <a href="https://testflight.apple.com/join/placeholder" target="_blank" rel="noopener" className="w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-black text-white rounded-xl py-2.5 text-sm font-bold transition-colors"> TestFlight — instalar</a>
+                <a href="/assets/app/TechBodyU.ipa" onClick={(e)=>{ if(!(e as any).currentTarget.href.includes('http')){ e.preventDefault(); setShowIOSInfo(v=>!v) } }} className="w-full flex items-center justify-center gap-2 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-xl py-2.5 text-sm font-semibold transition-colors"><Download size={14}/> .ipa direto UE</a>
+                <button onClick={()=>setShowIOSInfo(v=>!v)} className="w-full text-xs font-semibold text-[#FF7A1A] hover:underline">Como instalar? →</button>
+              </div>
+              {showIOSInfo && <div className="mt-3 bg-white border border-zinc-200 rounded-xl p-3 text-xs leading-relaxed text-zinc-700">1. Toca em TestFlight → aceita → instala<br/>2. Alternativa UE: toca em .ipa → permite → instala (requer iOS 17.4+ UE)<br/><span className="text-[11px] text-zinc-500">Updates OTA via Capgo: abres a app e recebe o novo design/treinos sem voltar à loja.</span></div>}
+            </div>
+            <div className="rounded-2xl border border-zinc-200 p-4 bg-white">
+              <div className="text-sm font-bold text-zinc-900 flex items-center gap-1.5"><Smartphone size={14}/> Android / Desktop</div>
+              <p className="text-xs text-zinc-600 mt-1">PWA 100% com BLE direto.</p>
+              <div className="mt-3 space-y-2">
+                <button onClick={handleAndroidInstall} className="w-full flex items-center justify-center gap-2 bg-[#FF7A1A] hover:bg-orange-600 text-white rounded-xl py-2.5 text-sm font-bold transition-colors"><Download size={14}/> Instalar no Android</button>
+                <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 justify-center"><Bluetooth size={12}/> Bluetooth EMS já funciona aqui</div>
+                <button onClick={()=>setShowAndroidTip(v=>!v)} className="w-full text-xs font-semibold text-zinc-600 hover:underline">Não apareceu popup?</button>
+              </div>
+              {showAndroidTip && <div className="mt-3 bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-xs leading-relaxed text-zinc-700">Chrome → menu ⋮ → <span className="font-semibold">Instalar app</span> ou <span className="font-semibold">Adicionar ao ecrã principal</span>. Depois abre pelo ícone.</div>}
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-[11px] text-zinc-500"><RefreshCw size={12}/> Updates automáticos via Cloudflare + Capgo — sem App Store.</div>
+        </div>
+
         <div className="w-full max-w-[420px] bg-white rounded-[20px] border border-zinc-200 shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-5 md:p-6">
           <h1 className="text-[18px] font-bold text-zinc-900">{mode==='signup' ? 'Criar conta' : 'Entrar'}</h1>
           <p className="text-xs text-zinc-500 mt-1">{mode==='signup' ? 'Conta real — fica guardada neste browser (tbu:user). Depois entras com o mesmo email/pass.' : 'Entra com o email e password que criaste.'}</p>
@@ -79,7 +134,6 @@ export default function Auth(){
               <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="mín. 4 caracteres" type="password" className="mt-1 w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#FF7A1A] focus:ring-2 focus:ring-orange-100" />
             </div>
             <button onClick={handle} className={`w-full rounded-xl py-3 text-sm font-bold text-white transition-colors mt-2 ${mode==='signup'?'bg-[#FF7A1A] hover:bg-orange-600':'bg-zinc-900 hover:bg-black'}`}>{mode==='signup' ? 'Criar conta e entrar' : 'Entrar'}</button>
-            <button onClick={demoLogin} className="w-full rounded-xl py-3 text-sm font-semibold border border-zinc-200 hover:bg-zinc-50 transition-colors">Continuar como demo (Luiz)</button>
             <p className="text-[11px] text-zinc-400 text-center">Ao criares conta aceitas os Termos • dados ficam só neste dispositivo (localStorage). Depois podes terminar sessão no Perfil.</p>
           </div>
           <div className="mt-4 text-center text-xs text-zinc-500">

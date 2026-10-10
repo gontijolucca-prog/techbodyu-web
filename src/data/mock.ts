@@ -41,7 +41,7 @@ export const categorias: Categoria[] = [
   { slug:'tematicas', titulo:'Aulas Temáticas (Glúteos, Dança, ...)', thumb:'/assets/images/trainerdeatils.png' },
 ]
 
-export const user = { nome:'LUIZ SANTANA', pontos:275, pontosTotal:350, conquistasPts:500, kcal:1328, membroDesde:'Março 2026' }
+export const appInfo = { nome:'TechBody U', pontosRef:275 }
 
 export type EstatTreino = { nome:string; data:string; hora:string; concluido:boolean; dur:string; cal:string }
 export const estatisticasMes: EstatTreino[] = [
