@@ -76,7 +76,7 @@ export default function Auth(){
     <div className="min-h-full bg-[#FAFAF8] flex flex-col">
       <div className="bg-white border-b border-zinc-200 px-4 md:px-6 py-4 flex items-center justify-center">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#FF7A1A] grid place-items-center text-white font-black text-sm">T</div>
+          <img src="/assets/images/applogo.png" alt="TechBody U" className="w-8 h-8 rounded-xl object-cover shadow-sm" />
           <span className="text-sm font-black tracking-tight text-zinc-900">TECHBODY U</span>
           <span className="text-xs text-zinc-400 ml-1">Web</span>
         </div>
