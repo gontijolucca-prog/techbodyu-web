@@ -5,7 +5,9 @@ import { colecoes, categorias, treinos } from '../data/mock'
 import { useAppState } from '../context/AppState'
 
 export default function Home(){
-  const { points, completed } = useAppState()
+  const { points, completed, user } = useAppState()
+  const nome = user?.nome || 'Utilizador'
+  const avatar = user?.avatar || '/assets/images/fitness-profile.jpg'
   const [q,setQ]=useState('')
   const term = q.toLowerCase().trim()
   const { fTreinos, fColecoes, fCategorias } = useMemo(()=>{
@@ -22,10 +24,10 @@ export default function Home(){
       <div className="bg-white px-4 md:px-6 pt-4 md:pt-6 pb-3 border-b border-zinc-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/assets/images/fitness-profile.jpg" className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover" alt="avatar"/>
+            <img src={avatar} className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover border border-zinc-200" alt="avatar"/>
             <div>
               <div className="text-[11px] md:text-xs text-zinc-500 leading-none">Boa tarde,</div>
-              <div className="text-[13px] md:text-[15px] font-extrabold tracking-wide text-zinc-900 -mt-0.5">LUIZ SANTANA</div>
+              <div className="text-[13px] md:text-[15px] font-extrabold tracking-wide text-zinc-900 -mt-0.5">{nome.toUpperCase()}</div>
             </div>
           </div>
           <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-full px-2.5 py-1.5">

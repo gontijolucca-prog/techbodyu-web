@@ -1,24 +1,32 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ChevronRight, LogOut } from 'lucide-react'
 import { useAppState } from '../context/AppState'
 
 export default function Perfil(){
-  const { points } = useAppState()
+  const { points, user, logout } = useAppState()
+  const nav = useNavigate()
   const [bio,setBio]=useState(()=> localStorage.getItem('tbu:bio') === '1')
   const [toast,setToast]=useState<string|null>(null)
   useEffect(()=>{ localStorage.setItem('tbu:bio', bio ? '1':'0') },[bio])
   useEffect(()=>{ if(toast){ const t=setTimeout(()=>setToast(null),2200); return ()=>clearTimeout(t)}},[toast])
   const show=(m:string)=> setToast(m)
+  const nome = user?.nome || 'Utilizador'
+  const email = user?.email || ''
+  const avatar = user?.avatar || '/assets/images/fitness-profile.jpg'
+  const handleLogout=()=>{
+    logout()
+    nav('/auth')
+  }
   return (
     <div className="pb-6 bg-[#FAFAF8] min-h-full">
       <div className="bg-white p-4 md:p-6 flex items-center gap-4 border-b border-zinc-200">
-        <img src="/assets/images/fitness-profile.jpg" className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover" alt="avatar"/>
-        <div className="flex-1">
-          <div className="text-sm md:text-base font-bold text-zinc-900">LUIZ SANTANA</div>
-          <div className="text-xs md:text-sm text-zinc-500">Membro desde Março 2026 • Subscrição</div>
+        <img src={avatar} className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border border-zinc-200" alt="avatar"/>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm md:text-base font-bold text-zinc-900 truncate">{nome.toUpperCase()}</div>
+          <div className="text-xs md:text-sm text-zinc-500 truncate">{email ? email + ' • Membro desde Março 2026' : 'Membro desde Março 2026'} • Subscrição</div>
         </div>
-        <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-full px-3 py-1.5">
+        <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-full px-3 py-1.5 shrink-0">
           <span className="w-6 h-6 rounded-full bg-[#FF7A1A] grid place-items-center text-white text-xs">🏅</span>
           <span className="text-sm font-bold text-[#FF7A1A]">{points}</span>
           <span className="text-xs text-zinc-500">points</span>
@@ -51,6 +59,14 @@ export default function Perfil(){
           </button>
         </div>
         <p className="text-xs text-zinc-400 px-1">O interruptor guarda em <code className="bg-zinc-100 px-1 rounded">tbu:bio</code> e funciona mesmo offline.</p>
+
+        <div className="text-xs font-bold text-zinc-500 tracking-widest mt-4">Conta</div>
+        <div className="bg-white rounded-2xl border border-zinc-200 p-4">
+          <div className="text-sm font-semibold text-zinc-900">{nome}</div>
+          <div className="text-xs text-zinc-500 mt-1 break-all">{email}</div>
+          <button onClick={handleLogout} className="mt-4 w-full flex items-center justify-center gap-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl py-2.5 text-sm font-bold transition-colors cursor-pointer"><LogOut size={16}/> Terminar sessão</button>
+          <p className="text-[11px] text-zinc-400 mt-2 text-center">Ao terminar sais da app web e voltas ao login. Progresso fica guardado para este email.</p>
+        </div>
       </div>
       {toast && <div className="fixed bottom-[80px] md:bottom-6 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-sm px-4 py-2.5 rounded-full shadow-lg z-50 text-center max-w-[90%]">{toast}</div>}
     </div>

@@ -13,18 +13,37 @@ export default function Treino(){
   const [suit,setSuit]=useState(false)
   const [intensity,setIntensity]=useState(5)
   const [paused,setPaused]=useState(true)
-  const [progress,setProgress]=useState(35)
-  const duration = 69
-  const intervalRef = useRef<number|null>(null)
+  const [progress,setProgress]=useState(0)
+  const [duration,setDuration]=useState(69)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const fmt = (s:number)=> `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`
 
   useEffect(()=>{
-    if(paused) { if(intervalRef.current) window.clearInterval(intervalRef.current); return }
-    intervalRef.current = window.setInterval(()=> setProgress(p=> p>=duration? duration : p+1), 1000)
-    return ()=> { if(intervalRef.current) window.clearInterval(intervalRef.current) }
-  },[paused, duration])
+    const v = videoRef.current
+    if(!v) return
+    const onLoaded=()=> setDuration(Math.round(v.duration) || 69)
+    const onTime=()=> setProgress(Math.floor(v.currentTime))
+    const onEnded=()=> setPaused(true)
+    v.addEventListener('loadedmetadata', onLoaded)
+    v.addEventListener('timeupdate', onTime)
+    v.addEventListener('ended', onEnded)
+    return ()=>{ v.removeEventListener('loadedmetadata', onLoaded); v.removeEventListener('timeupdate', onTime); v.removeEventListener('ended', onEnded) }
+  },[t.id])
 
-  const pct = (progress/duration)*100
-  const fmt = (s:number)=> `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`
+  useEffect(()=>{
+    const v = videoRef.current
+    if(!v) return
+    if(paused) v.pause()
+    else v.play().catch(()=> setPaused(true))
+  },[paused])
+
+  const handleSeek=(v:number)=>{
+    setProgress(v)
+    if(videoRef.current) videoRef.current.currentTime = v
+  }
+
+  const pct = duration ? (progress/duration)*100 : 0
 
   return (
     <div className="bg-[#FAFAF8] min-h-full flex flex-col">
@@ -41,28 +60,36 @@ export default function Treino(){
 
       <div className="w-full max-w-[960px] mx-auto">
         <div className="relative bg-black md:rounded-b-2xl overflow-hidden">
-          <img src="/assets/images/Video.jpg" alt="treino" className="w-full h-[240px] sm:h-[340px] md:h-[420px] object-cover"/>
-          <div className="absolute inset-0">
-            <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+          <video
+            ref={videoRef}
+            src="/assets/videos/techpower1.mp4"
+            poster="/assets/images/Video.jpg"
+            className="w-full h-[240px] sm:h-[340px] md:h-[420px] object-cover"
+            playsInline
+            preload="metadata"
+            onClick={()=>setPaused(v=>!v)}
+          />
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 pointer-events-auto">
               <button onClick={()=>setSuit(true)} className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-black/50 backdrop-blur border border-white/20 grid place-items-center text-white hover:bg-black/60 transition-colors">◧</button>
             </div>
-            <div className="absolute inset-0 grid place-items-center">
+            <div className="absolute inset-0 grid place-items-center pointer-events-auto">
               <button onClick={()=>setPaused(v=>!v)} className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#FF7A1A] grid place-items-center shadow-xl text-white hover:scale-105 transition-transform">
                 {paused ? <Play size={22} fill="white" className="ml-0.5"/> : <Pause size={22} fill="white"/>}
               </button>
             </div>
-            <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 items-center">
+            <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 items-center pointer-events-auto">
               <button onClick={()=>setIntensity(v=>Math.max(0,v-1))} className="w-9 h-12 sm:w-10 sm:h-12 rounded-xl bg-white/15 backdrop-blur border border-white/20 grid place-items-center text-white hover:bg-white/25 transition-colors"><Minus size={16}/></button>
               <div className="w-9 h-8 sm:w-10 sm:h-9 rounded-xl bg-white/95 grid place-items-center text-zinc-900 text-xs sm:text-sm font-bold">{intensity}%</div>
               <button onClick={()=>setIntensity(v=>Math.min(100,v+1))} className="w-9 h-12 sm:w-10 sm:h-12 rounded-xl bg-white/15 backdrop-blur border border-white/20 grid place-items-center text-white hover:bg-white/25 transition-colors"><Plus size={16}/></button>
             </div>
-            <div className="absolute bottom-0 inset-x-0 px-3 sm:px-4 pb-3">
+            <div className="absolute bottom-0 inset-x-0 px-3 sm:px-4 pb-3 pointer-events-auto">
               <div className="flex items-center gap-2 text-white text-xs">
                 <span className="font-mono">{fmt(progress)}</span>
-                <input type="range" min={0} max={duration} value={progress} onChange={e=>setProgress(parseInt(e.target.value))} className="flex-1 h-1 accent-[#FF7A1A] cursor-pointer" />
+                <input type="range" min={0} max={duration} value={progress} onChange={e=>handleSeek(parseInt(e.target.value))} className="flex-1 h-1 accent-[#FF7A1A] cursor-pointer" />
                 <span className="font-mono">{fmt(duration)}</span>
               </div>
-              <div className="mt-2 h-8 rounded-t-xl overflow-hidden relative bg-gradient-to-t from-orange-500/40 to-transparent">
+              <div className="mt-2 h-8 rounded-t-xl overflow-hidden relative bg-gradient-to-t from-orange-500/40 to-transparent pointer-events-none">
                 <div className="absolute inset-0 opacity-60" style={{background: 'linear-gradient(90deg, #000 ' + pct + '%, #FF7A1A ' + pct + '%)', clipPath:'polygon(0 100%, 5% 20%, 15% 80%, 25% 10%, 35% 90%, 45% 5%, 55% 85%, 65% 15%, 75% 70%, 85% 30%, 100% 100%)'}}/>
                 <div className="absolute top-0 bottom-0 w-0.5 bg-[#FF7A1A]" style={{left: `${pct}%`}}/>
               </div>
@@ -81,7 +108,7 @@ export default function Treino(){
           <span className="text-xs bg-[#FF7A1A] text-white px-2.5 py-1.5 rounded-full font-bold">{t.pts} pts</span>
           <span className="text-xs bg-zinc-100 px-2.5 py-1.5 rounded-full hidden sm:inline">Full Body</span>
         </div>
-        <p className="text-sm text-zinc-600 mt-4 leading-relaxed">Treino com duas fases onde combina força e potência com electroestimulação para queima calórica, reduz gordura, tonifica e define o corpo, promovendo força rápida e performance.</p>
+        <p className="text-sm text-zinc-600 mt-4 leading-relaxed">Treino com duas fases onde combina força e potência com electroestimulação para queima calórica, reduz gordura, tonifica e define o corpo, promovendo força rápida e performance. Vídeo real com streaming imediato — sem downloads.</p>
         <div className="mt-6">
           <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">⚡ Fases do Treino</h3>
           <div className="mt-3 grid sm:grid-cols-2 gap-3">
