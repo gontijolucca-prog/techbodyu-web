@@ -5,18 +5,16 @@ html, body { background: #FAFAF8; margin:0; height:auto; min-height:100%; overfl
 ::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
 #root { min-height:100vh; }
 .overflow-x-auto { touch-action: pan-x pan-y; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
-img[src*="c2.png"], img[src*="c3.png"], img[src*="c4.png"], img[src*="c5.png"] {
-  filter: blur(1.8px) contrast(1.02) saturate(1.02) brightness(1.02);
+img[src*="/b1.png"], img[src*="start"], img[src$="/2.png"], img[src$="/3.png"], img[src*="580.png"] {
+  filter: blur(1.8px) contrast(1.02) brightness(1.01);
   image-rendering: auto;
 }
-img[src*="c2.png"].loaded, img[src*="c3.png"].loaded, img[src*="c4.png"].loaded, img[src*="c5.png"].loaded {
-  filter: blur(1.6px) contrast(1.02) saturate(1.02);
-}
 img[src*="tr1.png"], img[src*="tr2.png"], img[src*="tr3.png"], img[src*="tr4.png"], img[src*="tr5.png"], img[src*="tr6.png"] {
-  filter: blur(1.2px) contrast(1.02) brightness(1.01);
+  filter: blur(1.6px) contrast(1.02) brightness(1.01);
+  image-rendering: auto;
 }
-img[src*="b1.png"], img[src*="start"], img[src*="2.png"], img[src*="3.png"], img[src*="580.png"] {
-  filter: blur(1.4px) contrast(1.02) brightness(1.01);
+img[src*="c2.png"], img[src*="c3.png"], img[src*="c4.png"], img[src*="c5.png"] {
+  filter: blur(2.4px) contrast(1.01) saturate(1.01) brightness(1.02);
   image-rendering: auto;
 }
 .card-img, .recomendados img, .colecao img {
