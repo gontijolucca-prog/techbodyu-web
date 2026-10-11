@@ -49,6 +49,8 @@ export default function Auth(){
     if(mode==='signup'){
       stored[key]={ nome: nome.trim() || email.split('@')[0], email:key, password, avatar:'/assets/images/fitness-profile.jpg' }
       localStorage.setItem('tbu:users', JSON.stringify(stored))
+      if(!localStorage.getItem(`tbu:points:${key}`)) localStorage.setItem(`tbu:points:${key}`, '0')
+      if(!localStorage.getItem(`tbu:completed:${key}`)) localStorage.setItem(`tbu:completed:${key}`, '[]')
       const u={ nome: stored[key].nome, email:key, avatar: stored[key].avatar }
       setUser(u)
       nav('/')

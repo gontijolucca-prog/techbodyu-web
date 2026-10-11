@@ -20,7 +20,7 @@ function AnimatedRoutes(){
   const loc = useLocation()
   return (
     <AnimatePresence mode="wait">
-      <motion.div key={loc.pathname} initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} transition={{duration:0.22, ease:[0.2,0,0,1]}} className="flex-1 flex flex-col">
+      <motion.div key={loc.pathname} initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}} transition={{duration:0.22, ease:[0.2,0,0,1]}} className="flex-1 flex flex-col min-h-0 overflow-visible">
         <Routes location={loc}>
           <Route path="/auth" element={<Auth/>} />
           <Route path="/download" element={<Download/>} />
@@ -51,15 +51,15 @@ function Shell(){
   const loc = useLocation()
   const hideNav = loc.pathname==='/sucesso' || loc.pathname==='/objetivo' || loc.pathname==='/auth' || loc.pathname==='/login' || loc.pathname==='/signup'
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
+    <div className="min-h-screen bg-[#FAFAF8] flex flex-col" style={{minHeight:'100dvh'}}>
       {!hideNav && <TopNav />}
-      <div className="w-full max-w-[1280px] mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-6 flex-1">
-        <div className="bg-white md:rounded-[20px] md:border md:border-zinc-200 md:shadow-[0_8px_32px_rgba(0,0,0,0.06)] min-h-[640px] relative">
+      <div className="w-full max-w-[1280px] mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-6 flex-1 flex flex-col min-h-0">
+        <div className="bg-white md:rounded-[20px] md:border md:border-zinc-200 md:shadow-[0_8px_32px_rgba(0,0,0,0.06)] min-h-[640px] flex-1 flex flex-col relative overflow-visible">
           <AnimatedRoutes/>
         </div>
       </div>
       {!hideNav && <BottomNav/>}
-      <div className="h-[72px] md:hidden shrink-0" style={{display: hideNav ? 'none' : 'block', paddingBottom: 'env(safe-area-inset-bottom)'}}/>
+      {!hideNav && <div className="h-[72px] md:hidden shrink-0" style={{paddingBottom: 'env(safe-area-inset-bottom)'}}/>}
     </div>
   )
 }

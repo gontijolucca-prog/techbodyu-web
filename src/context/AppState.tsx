@@ -48,8 +48,11 @@ export function AppStateProvider({children}:{children:ReactNode}){
   const suitKey = user ? `tbu:suit:${user.email}` : 'tbu:suit'
 
   const [points,setPoints]=useState(()=>{
-    const s = localStorage.getItem(pointsKey) || localStorage.getItem('tbu:points')
-    return s? parseInt(s): 275
+    const s = localStorage.getItem(pointsKey)
+    if(s) return parseInt(s)
+    if(user && localStorage.getItem(`tbu:points:${user.email}`)) return parseInt(localStorage.getItem(`tbu:points:${user.email}`)!)
+    if(!user && localStorage.getItem('tbu:points')) return parseInt(localStorage.getItem('tbu:points')!)
+    return user ? 0 : 275
   })
   const [completed,setCompleted]=useState<string[]>(()=>{
     const s = localStorage.getItem(completedKey) || localStorage.getItem('tbu:completed')
@@ -70,7 +73,7 @@ export function AppStateProvider({children}:{children:ReactNode}){
   const [bleConnected,setBleConnected]=useState(false)
   const [demoMode,setDemoMode]=useState(()=> localStorage.getItem('tbu:ems:demo')==='1')
 
-  useEffect(()=>{ localStorage.setItem(pointsKey, String(points)); if(!user) localStorage.setItem('tbu:points', String(points)) },[points, pointsKey, user])
+  useEffect(()=>{ if(user && localStorage.getItem(pointsKey)==='0' && points===275) { setPoints(0); return } localStorage.setItem(pointsKey, String(points)); if(!user) localStorage.setItem('tbu:points', String(points)) },[points, pointsKey, user])
   useEffect(()=>{ localStorage.setItem(completedKey, JSON.stringify(completed)); if(!user) localStorage.setItem('tbu:completed', JSON.stringify(completed)) },[completed, completedKey, user])
   useEffect(()=>{ localStorage.setItem(calibKey, JSON.stringify(calibracoes)); if(!user) localStorage.setItem('tbu:calib', JSON.stringify(calibracoes)) },[calibracoes, calibKey, user])
   useEffect(()=>{ localStorage.setItem(suitKey, JSON.stringify(suitVals)); if(!user) localStorage.setItem('tbu:suit', JSON.stringify(suitVals)) },[suitVals, suitKey, user])
@@ -83,7 +86,7 @@ export function AppStateProvider({children}:{children:ReactNode}){
       const sCal = localStorage.getItem(`tbu:calib:${user.email}`)
       const sSuit = localStorage.getItem(`tbu:suit:${user.email}`)
       if (sP) setPoints(parseInt(sP))
-      else setPoints(275)
+      else setPoints(0)
       if (sC) setCompleted(JSON.parse(sC))
       else setCompleted([])
       if (sCal) setCalibracoes(JSON.parse(sCal))

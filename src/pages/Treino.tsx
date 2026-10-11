@@ -22,12 +22,17 @@ export default function Treino(){
   useEffect(()=>{
     const v = videoRef.current
     if(!v) return
+    v.pause()
+    v.currentTime = 0
+    setProgress(0)
+    setPaused(true)
     const onLoaded=()=> setDuration(Math.round(v.duration) || 69)
     const onTime=()=> setProgress(Math.floor(v.currentTime))
     const onEnded=()=> setPaused(true)
     v.addEventListener('loadedmetadata', onLoaded)
     v.addEventListener('timeupdate', onTime)
     v.addEventListener('ended', onEnded)
+    if(v.readyState >= 1){ v.currentTime = 0 }
     return ()=>{ v.removeEventListener('loadedmetadata', onLoaded); v.removeEventListener('timeupdate', onTime); v.removeEventListener('ended', onEnded) }
   },[t.id])
 
