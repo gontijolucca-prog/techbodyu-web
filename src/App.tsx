@@ -15,6 +15,7 @@ import Objetivo from './pages/Objetivo'
 import Sucesso from './pages/Sucesso'
 import Auth from './pages/Auth'
 import Download from './pages/Download'
+import Avisos from './pages/Avisos'
 
 function AnimatedRoutes(){
   const loc = useLocation()
@@ -24,6 +25,7 @@ function AnimatedRoutes(){
         <Routes location={loc}>
           <Route path="/auth" element={<Auth/>} />
           <Route path="/download" element={<Download/>} />
+          <Route path="/avisos" element={<RequireAuth><Avisos/></RequireAuth>} />
           <Route path="/login" element={<Navigate to="/auth" replace/>} />
           <Route path="/signup" element={<Navigate to="/auth" replace/>} />
           <Route path="/" element={<RequireAuth><Home/></RequireAuth>} />

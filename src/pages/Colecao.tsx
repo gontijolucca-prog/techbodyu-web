@@ -1,13 +1,16 @@
 import { Link } from 'react-router-dom'
 import { ChevronLeft, Lock } from 'lucide-react'
-import { colecaoPrimeiros } from '../data/mock'
 import { useAppState } from '../context/AppState'
 import { useState, useEffect } from 'react'
-
-const treinoMap = ['techpower1','recuperacao','massagem','core1','circuito1','hiit','perda-peso','techpower1']
+import { useParams } from 'react-router-dom'
 
 export default function Colecao(){
-  const { completed } = useAppState()
+  const { completed, planById, planWorkouts } = useAppState()
+  const { id } = useParams()
+  const plan = planById(id)
+  const lista = planWorkouts(id)
+  const treinoMap = lista.map(t=>t.id)
+  const items = lista.map((t, i) => ({ n: i+1, titulo: t.titulo, leg: `${t.dur} • ${t.nivel}`, thumb: t.thumb }))
   const [toast,setToast]=useState<string|null>(null)
   useEffect(()=>{ if(toast){ const t=setTimeout(()=>setToast(null),2200); return ()=>clearTimeout(t)}},[toast])
   const isUnlocked=(idx:number)=>{
@@ -19,13 +22,13 @@ export default function Colecao(){
       <div className="bg-white border-b border-zinc-200 px-4 md:px-6 py-3">
         <div className="flex items-center gap-3">
           <Link to="/" className="w-8 h-8 rounded-full bg-[#FF7A1A] text-white grid place-items-center hover:bg-orange-600"><ChevronLeft size={18}/></Link>
-          <h1 className="flex-1 text-center md:text-left text-xs md:text-sm font-bold tracking-wide text-[#FF7A1A] leading-tight">PRIMEIROS PASSOS: MOVIMENTO, FORÇA E CONFIANÇA EM 4 SEMANAS</h1>
+          <h1 className="flex-1 text-center md:text-left text-xs md:text-sm font-bold tracking-wide text-[#FF7A1A] leading-tight">{(plan?.name?.trim() || 'COLEÇÃO').toUpperCase()}</h1>
           <span className="w-8"/>
         </div>
         <div className="mt-3 bg-[#FFF7ED] border border-orange-100 rounded-xl px-3 py-2.5 text-xs md:text-sm text-zinc-600 max-w-[720px]">Web • streaming imediato — sem downloads. Completa um treino para desbloquear o próximo.</div>
       </div>
       <div className="p-4 md:p-6 max-w-[1100px] mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-        {colecaoPrimeiros.map((item, idx)=>{
+        {items.map((item, idx)=>{
           const unlocked = isUnlocked(idx)
           const treinoId = treinoMap[idx] || 'techpower1'
           const done = completed.includes(treinoId)

@@ -1,22 +1,13 @@
 import { Link, useParams } from 'react-router-dom'
 import { ChevronLeft, Info, Play } from 'lucide-react'
-import { treinos } from '../data/mock'
 import { useAppState } from '../context/AppState'
 
-const map: Record<string,string> = {
-  'perda-de-peso': 'Weight',
-  'forca': 'Strength',
-  'saude': 'Recovery',
-  'livres': 'Cardio',
-  'tematicas': 'Core'
-}
 export default function Categoria(){
   const { slug } = useParams()
-  const { completed } = useAppState()
-  const title = slug==='perda-de-peso' ? 'PERDA DE PESO' : slug==='forca' ? 'FORÇA E TONIFICAÇÃO' : slug==='saude' ? 'SAÚDE E BEM ESTAR' : slug==='livres' ? 'TREINOS LIVRES' : slug==='tematicas' ? 'AULAS TEMÁTICAS' : slug?.toUpperCase().replace(/-/g,' ') || 'CATEGORIA'
-  const catKey = map[slug || ''] 
-  const list = catKey ? treinos.filter(t=> t.cat===catKey) : treinos
-  const show = list.length? list : treinos.slice(0,4)
+  const { completed, groupBySlug, groupWorkouts } = useAppState()
+  const group = groupBySlug(slug)
+  const title = (group?.name?.trim() || slug?.replace(/-/g,' ') || 'CATEGORIA').toUpperCase()
+  const show = groupWorkouts(slug)
   return (
     <div className="pb-6 bg-[#FAFAF8] min-h-full">
       <div className="bg-white border-b border-zinc-200 px-4 md:px-6 py-3">
@@ -31,7 +22,7 @@ export default function Categoria(){
         </div>
       </div>
       <div className="p-4 md:p-6 max-w-[1100px] mx-auto">
-        <p className="text-xs text-zinc-500 mb-3">{show.length} treinos • {catKey || 'todos'} • todos disponíveis</p>
+        <p className="text-xs text-zinc-500 mb-3">{show.length} treinos • {group?.name?.trim() || 'todos'} • todos disponíveis</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {show.map(t=>{
             const done = completed.includes(t.id)

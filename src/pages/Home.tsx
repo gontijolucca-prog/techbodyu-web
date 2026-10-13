@@ -1,12 +1,11 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, X } from 'lucide-react'
-import { colecoes, categorias, treinos } from '../data/mock'
+import { Search, X, Megaphone } from 'lucide-react'
 import { useAppState } from '../context/AppState'
 import InstallPWA from '../components/InstallPWA'
 
 export default function Home(){
-  const { points, completed, user } = useAppState()
+  const { points, completed, user, treinos, categorias, colecoes, notifications, unread } = useAppState()
   const nome = user?.nome || 'Utilizador'
   const avatar = user?.avatar || '/assets/images/fitness-profile.jpg'
   const [q,setQ]=useState('')
@@ -46,6 +45,19 @@ export default function Home(){
       <div className="px-4 md:px-6 mt-4 max-w-[640px]">
         <InstallPWA/>
       </div>
+
+      {notifications.length > 0 && (
+        <div className="px-4 md:px-6 mt-3 max-w-[640px]">
+          <Link to="/avisos" className="flex items-center gap-3 bg-white border border-zinc-200 rounded-2xl p-3.5 hover:border-orange-200 hover:shadow-sm transition-all">
+            <div className="w-9 h-9 rounded-full bg-orange-50 text-[#FF7A1A] grid place-items-center shrink-0"><Megaphone size={17}/></div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[13px] font-bold text-zinc-900 truncate">{notifications[0].title}</div>
+              <div className="text-xs text-zinc-500 truncate">{notifications[0].body || 'Toca para ver os avisos'}</div>
+            </div>
+            {unread > 0 && <span className="bg-[#FF7A1A] text-white text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0">{unread}</span>}
+          </Link>
+        </div>
+      )}
 
       {!hasResults ? <div className="px-4 md:px-6 mt-8"><div className="text-center py-12 bg-white rounded-2xl border border-zinc-200"><p className="text-zinc-900 font-semibold">Nenhum resultado para "{q}"</p><p className="text-sm text-zinc-500 mt-1">Tenta "TechPower", "Recovery" ou "Strength"</p><button onClick={()=>setQ('')} className="mt-4 px-5 py-2 rounded-full bg-[#FF7A1A] text-white text-sm font-bold">Limpar pesquisa</button></div></div> : <>
       <div className="px-4 md:px-6 mt-6">

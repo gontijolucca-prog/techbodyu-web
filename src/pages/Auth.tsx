@@ -4,13 +4,14 @@ import { useAppState } from '../context/AppState'
 import { Download, Apple, Smartphone, Bluetooth, RefreshCw } from 'lucide-react'
 
 export default function Auth(){
-  const { setUser } = useAppState()
+  const { setUser, signIn, signUp, online } = useAppState()
   const nav = useNavigate()
   const [mode,setMode]=useState<'login'|'signup'>('signup')
   const [nome,setNome]=useState('')
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [error,setError]=useState<string|null>(null)
+  const [busy,setBusy]=useState(false)
   const [deferred,setDeferred]=useState<any>(null)
   const [,setIsIOS]=useState(false)
   const [showAndroidTip,setShowAndroidTip]=useState(false)
@@ -35,17 +36,25 @@ export default function Auth(){
 
   const validate=()=>{
     if(!email.trim() || !email.includes('@')) return 'Email inválido'
-    if(password.length < 4) return 'Password mínima 4 caracteres'
+    if(password.length < 6) return 'Password mínima 6 caracteres'
     if(mode==='signup' && nome.trim().length < 2) return 'Nome obrigatório'
     return null
   }
 
-  const handle=()=>{
+  const handle=async ()=>{
     const e=validate()
     if(e){ setError(e); setTimeout(()=>setError(null),2500); return }
     const stored = (()=>{ try{ return JSON.parse(localStorage.getItem('tbu:users')||'{}') }catch{return{}} })()
     const key=email.trim().toLowerCase()
     if(key==='demo@techbody.pt'){ setError('Conta demo desativada — cria nova conta'); setTimeout(()=>setError(null),2500); return }
+    if(online){
+      setBusy(true)
+      const res = mode==='signup' ? await signUp(nome, key, password) : await signIn(key, password)
+      setBusy(false)
+      if(res.error){ setError(res.error); setTimeout(()=>setError(null),4000); return }
+      nav('/')
+      return
+    }
     if(mode==='signup'){
       stored[key]={ nome: nome.trim() || email.split('@')[0], email:key, password, avatar:'/assets/images/fitness-profile.jpg' }
       localStorage.setItem('tbu:users', JSON.stringify(stored))
@@ -130,7 +139,7 @@ export default function Auth(){
 
         <div className="w-full max-w-[420px] bg-white rounded-[20px] border border-zinc-200 shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-5 md:p-6">
           <h1 className="text-[18px] font-bold text-zinc-900">{mode==='signup' ? 'Criar conta' : 'Entrar'}</h1>
-          <p className="text-xs text-zinc-500 mt-1">{mode==='signup' ? 'Conta real — fica guardada neste browser (tbu:user). Depois entras com o mesmo email/pass.' : 'Entra com o email e password que criaste.'}</p>
+          <p className="text-xs text-zinc-500 mt-1">{mode==='signup' ? (online ? 'Conta real — criada no servidor e entra na hora.' : 'Conta real — fica guardada neste browser (tbu:user). Depois entras com o mesmo email/pass.') : 'Entra com o email e password da tua conta.'}</p>
           <div className="mt-4 flex bg-zinc-100 rounded-full p-1">
             <button onClick={()=>setMode('signup')} className={`flex-1 py-2 rounded-full text-sm font-semibold transition-colors ${mode==='signup'?'bg-[#FF7A1A] text-white shadow':'text-zinc-600 hover:text-zinc-900'}`}>Criar conta</button>
             <button onClick={()=>setMode('login')} className={`flex-1 py-2 rounded-full text-sm font-semibold transition-colors ${mode==='login'?'bg-zinc-900 text-white shadow':'text-zinc-600 hover:text-zinc-900'}`}>Entrar</button>
@@ -150,8 +159,8 @@ export default function Auth(){
               <label className="text-xs font-semibold text-zinc-700">Password</label>
               <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="mín. 4 caracteres" type="password" className="mt-1 w-full border border-zinc-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#FF7A1A] focus:ring-2 focus:ring-orange-100" />
             </div>
-            <button onClick={handle} className={`w-full rounded-xl py-3 text-sm font-bold text-white transition-colors mt-2 ${mode==='signup'?'bg-[#FF7A1A] hover:bg-orange-600':'bg-zinc-900 hover:bg-black'}`}>{mode==='signup' ? 'Criar conta e entrar' : 'Entrar'}</button>
-            <p className="text-[11px] text-zinc-400 text-center">Ao criares conta aceitas os Termos • dados ficam só neste dispositivo (localStorage). Depois podes terminar sessão no Perfil.</p>
+            <button onClick={handle} disabled={busy} className={`w-full rounded-xl py-3 text-sm font-bold text-white transition-colors mt-2 disabled:opacity-60 ${mode==='signup'?'bg-[#FF7A1A] hover:bg-orange-600':'bg-zinc-900 hover:bg-black'}`}>{busy ? 'A entrar…' : mode==='signup' ? 'Criar conta e entrar' : 'Entrar'}</button>
+            <p className="text-[11px] text-zinc-400 text-center">{online ? 'Ao criares conta aceitas os Termos • a conta fica ligada ao servidor (syncing em todos os dispositivos).' : 'Modo offline — a conta fica só neste dispositivo (localStorage).'}</p>
           </div>
           <div className="mt-4 text-center text-xs text-zinc-500">
             {mode==='signup' ? <span>Já tens conta? <button onClick={()=>setMode('login')} className="text-[#FF7A1A] font-semibold hover:underline">Entrar</button></span> : <span>Sem conta? <button onClick={()=>setMode('signup')} className="text-[#FF7A1A] font-semibold hover:underline">Criar conta</button></span>}

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Minus, Plus, Pause, Play } from 'lucide-react'
-import { treinos } from '../data/mock'
 import { useAppState } from '../context/AppState'
 import SuitModal from '../components/SuitModal'
 import { startEMSSession, stopEMSSession, pauseEMSSession } from '../lib/ems-adapter'
@@ -9,14 +8,22 @@ import { startEMSSession, stopEMSSession, pauseEMSSession } from '../lib/ems-ada
 export default function Treino(){
   const { id } = useParams()
   const nav = useNavigate()
-  const { toggleComplete, bleConnected, bleServer, calibracoes } = useAppState() as any
-  const t = treinos.find(x=>x.id===id) || treinos[0]
+  const { treinos, treinoById, fetchEms, toggleComplete, bleConnected, bleServer, calibracoes } = useAppState()
+  const raw = treinoById(id)
+  const t = treinos.find(x=>x.id===String(id)) || treinos[0]
+  const [ems,setEms]=useState<any|null>(null)
   const [suit,setSuit]=useState(false)
   const [intensity,setIntensity]=useState(5)
   const [paused,setPaused]=useState(true)
   const [progress,setProgress]=useState(0)
   const [duration,setDuration]=useState(69)
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(()=>{ let alive=true; if(raw?.id){ fetchEms(raw.id).then(p=>{ if(alive) setEms(p) }).catch(()=>{}) } return ()=>{alive=false} },[raw?.id])
+
+  const tSec = (s:string)=>{ const m=String(s||'').match(/(\d+):(\d+):(\d+)/); return m ? (+m[1])*3600+(+m[2])*60+(+m[3]) : 0 }
+  const eventAt = (sec:number)=>{ const evs=(ems?.events??[]).filter((e:any)=>e.frequency>0); let cur:any=null; for(const e of evs){ if(tSec(e.time)<=sec) cur=e } return cur ?? evs[0] ?? null }
+  const buildProg = ()=>{ const e=eventAt(progress); return { frequency:e?.frequency??90, pulseWidth:e?.pulseWidth??350, pulseDuration:4, pulsePause:e?.pulsePause??4, startDelayTime:Math.max(1,Math.round(e?.startDelayTime??2)), endDelayTime:Math.max(1,Math.round(e?.endDelayTime??2)), retryCount:3 } }
 
   const fmt = (s:number)=> `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`
 
@@ -40,15 +47,14 @@ export default function Treino(){
   useEffect(()=>{
     const v = videoRef.current
     if(!v) return
-    if(paused){ v.pause(); if(bleConnected && bleServer){ const prog={frequency:90,pulseWidth:350,pulseDuration:4,pulsePause:4,startDelayTime:2,endDelayTime:2,retryCount:3}; try{ pauseEMSSession(bleServer, prog, duration-progress) }catch{} } }
-    else { v.play().catch(()=> setPaused(true)); if(bleConnected && bleServer){ const parts:any={}; const all=['Peitoral','Glúteos','Abdómen','Tríceps','Bíceps','Isquiotibiais','Trapézio']; for(const m of all) parts[m]=calibracoes[m]??intensity; const prog={frequency:90,pulseWidth:350,pulseDuration:4,pulsePause:4,startDelayTime:2,endDelayTime:2,retryCount:3}; try{ startEMSSession(bleServer, parts, prog, duration-progress) }catch{} } }
+    if(paused){ v.pause(); if(bleConnected && bleServer){ try{ pauseEMSSession(bleServer, buildProg(), duration-progress) }catch{} } }
+    else { v.play().catch(()=> setPaused(true)); if(bleConnected && bleServer){ const parts:any={}; const all=['Peitoral','Glúteos','Abdómen','Tríceps','Bíceps','Isquiotibiais','Trapézio']; for(const m of all) parts[m]=calibracoes[m]??intensity; try{ startEMSSession(bleServer, parts, buildProg(), duration-progress) }catch{} } }
   },[paused])
 
   useEffect(()=>{
     if(bleConnected && bleServer && !paused){
-      const prog={frequency:90,pulseWidth:350,pulseDuration:4,pulsePause:4,startDelayTime:2,endDelayTime:2,retryCount:3}
       const parts:any={}; const all=['Peitoral','Glúteos','Abdómen','Tríceps','Bíceps','Isquiotibiais','Trapézio']; for(const m of all) parts[m]=intensity
-      try{ startEMSSession(bleServer, parts, prog, duration-progress) }catch{}
+      try{ startEMSSession(bleServer, parts, buildProg(), duration-progress) }catch{}
     }
   },[intensity])
 
@@ -78,7 +84,7 @@ export default function Treino(){
         <div className="relative bg-black md:rounded-b-2xl overflow-hidden">
           <video
             ref={videoRef}
-            src="/assets/videos/techpower1.mp4"
+            src={raw?.video_url || '/assets/videos/techpower1.mp4'}
             poster="/assets/images/Video.jpg"
             className="w-full h-[240px] sm:h-[340px] md:h-[420px] object-cover"
             playsInline
@@ -124,29 +130,24 @@ export default function Treino(){
           <span className="text-xs bg-[#FF7A1A] text-white px-2.5 py-1.5 rounded-full font-bold">{t.pts} pts</span>
           <span className="text-xs bg-zinc-100 px-2.5 py-1.5 rounded-full hidden sm:inline">Full Body</span>
         </div>
-        <p className="text-sm text-zinc-600 mt-4 leading-relaxed">Treino com duas fases onde combina força e potência com electroestimulação para queima calórica, reduz gordura, tonifica e define o corpo, promovendo força rápida e performance. Vídeo real com streaming imediato — sem downloads.</p>
+        <p className="text-sm text-zinc-600 mt-4 leading-relaxed">{raw?.description || 'Treino com electroestimulação — vídeo real com streaming imediato, sem downloads.'}</p>
         <div className="mt-6">
           <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2">⚡ Fases do Treino</h3>
           <div className="mt-3 grid sm:grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 bg-[#E8F5E9] border border-emerald-100 rounded-xl p-3">
-              <div className="w-10 h-10 rounded-lg bg-white grid place-items-center text-emerald-600">◧</div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-zinc-900">Warm Up</div>
-                <div className="text-xs text-zinc-500">00:00:00</div>
+            {(ems?.events?.length ? ems.events : [{phase:'Warm Up',time:'00:00:00',frequency:0},{phase:'Força',time:'00:03:41',frequency:60,pulseWidth:350}]).map((e:any,i:number)=>(
+              <div key={i} className={`flex items-center gap-3 border rounded-xl p-3 ${tSec(e.time)<=progress ? 'bg-[#E8F5E9] border-emerald-100' : 'bg-zinc-50 border-zinc-200'}`}>
+                <div className={`w-10 h-10 rounded-lg bg-white grid place-items-center ${tSec(e.time)<=progress ? 'text-emerald-600' : 'text-zinc-400 border'}`}>◧</div>
+                <div className="flex-1">
+                  <div className="text-sm font-semibold text-zinc-900">{e.phase}</div>
+                  <div className="text-xs text-zinc-500">{e.time}{e.frequency>0 ? ` • ${e.frequency} Hz • ${e.pulseWidth}µs` : ''}</div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 bg-zinc-50 border border-zinc-200 rounded-xl p-3">
-              <div className="w-10 h-10 rounded-lg bg-white border grid place-items-center text-zinc-400">◧</div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-zinc-900">Força</div>
-                <div className="text-xs text-zinc-500">00:03:41 • 1 ramp 3× 7s</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
         <div className="mt-6 grid sm:grid-cols-2 gap-3">
           <button onClick={()=>setSuit(true)} className="w-full bg-[#FF7A1A] text-white rounded-xl py-3.5 text-sm font-bold hover:bg-orange-600 transition-colors">⚡ Ajustar Fato</button>
-          <button onClick={()=>{ toggleComplete(t.id, t.pts); nav('/sucesso') }} className="w-full bg-zinc-900 text-white rounded-xl py-3.5 text-sm font-bold hover:bg-black transition-colors">Concluir Treino +{t.pts} pts</button>
+          <button onClick={async ()=>{ await toggleComplete(t.id, t.pts); nav('/sucesso') }} className="w-full bg-zinc-900 text-white rounded-xl py-3.5 text-sm font-bold hover:bg-black transition-colors">Concluir Treino +{t.pts} pts</button>
         </div>
       </div>
       <SuitModal open={suit} onClose={()=>setSuit(false)} />

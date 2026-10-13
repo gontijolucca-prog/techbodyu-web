@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom'
 import { ChevronLeft, Trophy } from 'lucide-react'
 import { useAppState } from '../context/AppState'
-import { conquistas as conquistasMock } from '../data/mock'
 
 export default function Conquistas(){
-  const { points, completed } = useAppState()
-  const totalKcal = completed.length * 245
+  const { points, completed, completions } = useAppState()
+  const totalKcal = completions.reduce((a,c)=> a + (c.calories ?? 0), 0) || completed.length * 245
+  const fmt = (iso:string) => {
+    const d = new Date(iso)
+    return d.toLocaleDateString('pt-PT', { day:'numeric', month:'short' }) + ' • ' + d.toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' })
+  }
+  const rows = completions.slice(0, 30)
   return (
     <div className="pb-6 bg-[#FAFAF8] min-h-full">
       <div className="bg-white border-b border-zinc-200 px-4 md:px-6 py-3 flex items-center gap-3">
@@ -26,14 +30,20 @@ export default function Conquistas(){
           </div>
         </div>
         <div className="mt-4 space-y-2">
-          {conquistasMock.slice(0, Math.max(completed.length,3)).map((c,i)=>(
-            <div key={i} className="bg-white rounded-2xl border border-zinc-200 p-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 grid place-items-center"><Trophy size={16}/></div>
+          {rows.length === 0 && (
+            <div className="bg-white rounded-2xl border border-zinc-200 p-6 text-center">
+              <p className="text-sm font-semibold text-zinc-900">Ainda sem conquistas</p>
+              <p className="text-xs text-zinc-500 mt-1">Conclui o primeiro treino para começares a somar pontos.</p>
+            </div>
+          )}
+          {rows.map((c)=>(
+            <div key={c.id} className="bg-white rounded-2xl border border-zinc-200 p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 grid place-items-center shrink-0"><Trophy size={16}/></div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-zinc-900 truncate">{c.titulo}</div>
-                <div className="text-xs text-zinc-500">{c.data}</div>
+                <div className="text-sm font-semibold text-zinc-900 truncate">{c.title || `Treino #${c.workout_id}`}</div>
+                <div className="text-xs text-zinc-500">Concluído {fmt(c.completed_at)}</div>
               </div>
-              <span className="text-sm font-bold text-emerald-600">{c.pts}</span>
+              <span className="text-sm font-bold text-emerald-600">+{c.points_awarded}</span>
             </div>
           ))}
         </div>

@@ -4,7 +4,7 @@ import { ChevronRight, LogOut } from 'lucide-react'
 import { useAppState } from '../context/AppState'
 
 export default function Perfil(){
-  const { points, user, logout } = useAppState()
+  const { points, user, logout, memberSince, profileTier, unread } = useAppState()
   const nav = useNavigate()
   const [bio,setBio]=useState(()=> localStorage.getItem('tbu:bio') === '1')
   const [toast,setToast]=useState<string|null>(null)
@@ -14,6 +14,7 @@ export default function Perfil(){
   const nome = user?.nome || 'Utilizador'
   const email = user?.email || ''
   const avatar = user?.avatar || '/assets/images/fitness-profile.jpg'
+  const desde = memberSince ? new Date(memberSince).toLocaleDateString('pt-PT', { month:'long', year:'numeric' }) : '—'
   const handleLogout=()=>{
     logout()
     nav('/auth')
@@ -24,7 +25,7 @@ export default function Perfil(){
         <img src={avatar} className="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border border-zinc-200" alt="avatar"/>
         <div className="flex-1 min-w-0">
           <div className="text-sm md:text-base font-bold text-zinc-900 truncate">{nome.toUpperCase()}</div>
-          <div className="text-xs md:text-sm text-zinc-500 truncate">{email ? email + ' • Membro desde Março 2026' : 'Membro desde Março 2026'} • Subscrição</div>
+          <div className="text-xs md:text-sm text-zinc-500 truncate">{email ? email + ' • Membro desde ' + desde : 'Membro desde ' + desde}{profileTier && profileTier !== 'None' ? ' • ' + profileTier : ''}</div>
         </div>
         <div className="flex items-center gap-1.5 bg-orange-50 border border-orange-200 rounded-full px-3 py-1.5 shrink-0">
           <span className="w-6 h-6 rounded-full bg-[#FF7A1A] grid place-items-center text-white text-xs">🏅</span>
@@ -34,6 +35,10 @@ export default function Perfil(){
       </div>
 
       <div className="p-4 md:p-6 max-w-[800px] mx-auto space-y-4">
+        <Link to="/avisos" className="block bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between hover:shadow-sm hover:border-orange-200 transition-all cursor-pointer">
+          <span className="text-sm font-semibold text-zinc-900">📣 Avisos da equipa</span>
+          <span className="flex items-center gap-2">{unread>0 && <span className="bg-[#FF7A1A] text-white text-[11px] font-bold px-2 py-0.5 rounded-full">{unread}</span>}<ChevronRight size={18} className="text-zinc-400"/></span>
+        </Link>
         <Link to="/objetivo" className="block bg-white rounded-2xl border border-zinc-200 p-4 flex items-center justify-between hover:shadow-sm hover:border-orange-200 transition-all cursor-pointer">
           <span className="text-sm font-semibold text-zinc-900">🎯 Perfil de Condição Física</span><ChevronRight size={18} className="text-zinc-400"/>
         </Link>
