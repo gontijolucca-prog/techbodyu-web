@@ -44,8 +44,9 @@ function AnimatedRoutes(){
   )
 }
 function RequireAuth({children}:{children:React.ReactNode}){
-  const { user } = useAppState()
+  const { user, ready } = useAppState()
   const loc = useLocation()
+  if(!ready) return null
   if(!user && loc.pathname !== '/auth' && loc.pathname !== '/download') return <Navigate to="/auth" replace />
   return <>{children}</>
 }
