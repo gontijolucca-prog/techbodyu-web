@@ -4,11 +4,12 @@ import { ChevronLeft, Minus, Plus, Pause, Play } from 'lucide-react'
 import { treinos } from '../data/mock'
 import { useAppState } from '../context/AppState'
 import SuitModal from '../components/SuitModal'
+import { startEMSSession, stopEMSSession, pauseEMSSession } from '../lib/ems-adapter'
 
 export default function Treino(){
   const { id } = useParams()
   const nav = useNavigate()
-  const { toggleComplete } = useAppState()
+  const { toggleComplete, bleConnected, bleServer, calibracoes } = useAppState() as any
   const t = treinos.find(x=>x.id===id) || treinos[0]
   const [suit,setSuit]=useState(false)
   const [intensity,setIntensity]=useState(5)
@@ -39,9 +40,17 @@ export default function Treino(){
   useEffect(()=>{
     const v = videoRef.current
     if(!v) return
-    if(paused) v.pause()
-    else v.play().catch(()=> setPaused(true))
+    if(paused){ v.pause(); if(bleConnected && bleServer){ const prog={frequency:90,pulseWidth:350,pulseDuration:4,pulsePause:4,startDelayTime:2,endDelayTime:2,retryCount:3}; try{ pauseEMSSession(bleServer, prog, duration-progress) }catch{} } }
+    else { v.play().catch(()=> setPaused(true)); if(bleConnected && bleServer){ const parts:any={}; const all=['Peitoral','Glúteos','Abdómen','Tríceps','Bíceps','Isquiotibiais','Trapézio']; for(const m of all) parts[m]=calibracoes[m]??intensity; const prog={frequency:90,pulseWidth:350,pulseDuration:4,pulsePause:4,startDelayTime:2,endDelayTime:2,retryCount:3}; try{ startEMSSession(bleServer, parts, prog, duration-progress) }catch{} } }
   },[paused])
+
+  useEffect(()=>{
+    if(bleConnected && bleServer && !paused){
+      const prog={frequency:90,pulseWidth:350,pulseDuration:4,pulsePause:4,startDelayTime:2,endDelayTime:2,retryCount:3}
+      const parts:any={}; const all=['Peitoral','Glúteos','Abdómen','Tríceps','Bíceps','Isquiotibiais','Trapézio']; for(const m of all) parts[m]=intensity
+      try{ startEMSSession(bleServer, parts, prog, duration-progress) }catch{}
+    }
+  },[intensity])
 
   const handleSeek=(v:number)=>{
     setProgress(v)
@@ -49,6 +58,8 @@ export default function Treino(){
   }
 
   const pct = duration ? (progress/duration)*100 : 0
+
+  useEffect(()=>{ return ()=>{ if(bleConnected && bleServer) try{ stopEMSSession(bleServer) }catch{} } },[])
 
   return (
     <div className="bg-[#FAFAF8] min-h-full flex flex-col">
