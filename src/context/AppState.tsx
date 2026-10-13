@@ -94,15 +94,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!online || !supabase) return
-    loadContent()
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
-      if (data.session?.user) loadUserData(data.session.user.id)
+      if (data.session?.user) { loadUserData(data.session.user.id); loadContent() }
       setReady(true)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s)
-      if (s?.user) loadUserData(s.user.id)
+      if (s?.user) { loadUserData(s.user.id); loadContent() }
       else { setProfile(null); setCompletions([]); setNotifications([]) }
     })
     return () => sub.subscription.unsubscribe()
